@@ -1,9 +1,12 @@
+import { Op, fn, col, literal } from "sequelize";
 import { Post } from "../models/Post.js";
 import { Category } from "../models/Category.js";
 import { ResearchSubmission } from "../models/ResearchSubmission.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const getStats = asyncHandler(async (req, res) => {
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
   const [
     totalRepos,
     totalWebsites,
@@ -15,51 +18,52 @@ export const getStats = asyncHandler(async (req, res) => {
     trendingRepos,
     topViewed,
   ] = await Promise.all([
-    Post.countDocuments({ type: "repo" }),
-    Post.countDocuments({ type: "website" }),
-    Category.countDocuments(),
-    ResearchSubmission.countDocuments(),
-    Post.countDocuments({ type: "repo", createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
-    Post.countDocuments({ type: "website", createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
-    ResearchSubmission.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
-    Post.find({ type: "repo", "githubMeta.stars": { $exists: true, $ne: null } })
-      .populate("category", "name")
-      .sort({ "githubMeta.stars": -1 })
-      .limit(5)
-      .lean(),
-    Post.find()
-      .populate("category", "name")
-      .sort({ views: -1 })
-      .limit(5)
-      .lean(),
+    Post.count({ where: { type: "repo" } }),
+    Post.count({ where: { type: "website" } }),
+    Category.count(),
+    ResearchSubmission.count(),
+    Post.count({ where: { type: "repo", createdAt: { [Op.gte]: weekAgo } } }),
+    Post.count({ where: { type: "website", createdAt: { [Op.gte]: weekAgo } } }),
+    ResearchSubmission.count({ where: { createdAt: { [Op.gte]: weekAgo } } }),
+    Post.findAll({
+      where: { 
+        type: "repo",
+        githubMeta: { [Op.ne]: null }
+      },
+      include: [{ model: Category, attributes: ["name"] }],
+      order: [[literal("githubMeta->>'stars'"), "DESC"]],
+      limit: 5
+    }),
+    Post.findAll({
+      include: [{ model: Category, attributes: ["name"] }],
+      order: [["views", "DESC"]],
+      limit: 5
+    }),
   ]);
 
-  const topWebsites = await Post.find({ type: "website" })
-    .populate("category", "name")
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .lean();
+  const topWebsites = await Post.findAll({
+    where: { type: "website" },
+    include: [{ model: Category, attributes: ["name"] }],
+    order: [["createdAt", "DESC"]],
+    limit: 5
+  });
 
-  const categoryBreakdown = await Post.aggregate([
-    { $match: { type: { $in: ["repo", "website"] } } },
-    { $group: { _id: "$category", count: { $sum: 1 } } },
-    { $sort: { count: -1 } },
-    { $limit: 6 },
-    {
-      $lookup: {
-        from: "categories",
-        localField: "_id",
-        foreignField: "_id",
-        as: "cat",
-      },
-    },
-    {
-      $project: {
-        name: { $arrayElemAt: ["$cat.name", 0] },
-        count: 1,
-      },
-    },
-  ]);
+  const categoryBreakdown = await Post.findAll({
+    where: { type: { [Op.in]: ["repo", "website"] } },
+    attributes: [
+      "categoryId",
+      [fn("COUNT", col("Post.id")), "count"]
+    ],
+    include: [{ model: Category, attributes: ["name"] }],
+    group: ["categoryId", "Category.id"],
+    order: [[literal("count"), "DESC"]],
+    limit: 6
+  });
+
+  const formattedBreakdown = categoryBreakdown.map(b => ({
+    name: b.Category?.name || "Unknown",
+    count: parseInt(b.get("count"), 10)
+  }));
 
   res.json({
     counts: {
@@ -79,6 +83,6 @@ export const getStats = asyncHandler(async (req, res) => {
       websites: topWebsites,
       popular: topViewed,
     },
-    categoryBreakdown,
+    categoryBreakdown: formattedBreakdown,
   });
 });

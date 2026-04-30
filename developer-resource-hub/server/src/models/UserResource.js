@@ -1,14 +1,33 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.js";
+import User from "./User.js";
 
-const userResourceSchema = new mongoose.Schema(
-  {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    title: { type: String, required: true, trim: true },
-    description: { type: String, required: true, trim: true },
-    link: { type: String, required: true, trim: true },
-    type: { type: String, enum: ["repo", "news", "other"], default: "other" },
+export const UserResource = sequelize.define("UserResource", {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
   },
-  { timestamps: true }
-);
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  link: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  type: {
+    type: DataTypes.ENUM("repo", "news", "other"),
+    defaultValue: "other"
+  }
+}, {
+  timestamps: true
+});
 
-export const UserResource = mongoose.model("UserResource", userResourceSchema);
+UserResource.belongsTo(User, { foreignKey: "userId" });
+
+export default UserResource;

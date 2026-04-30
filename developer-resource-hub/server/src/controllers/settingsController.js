@@ -17,17 +17,18 @@ export const updateSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) {
-      settings = new Settings();
+      settings = await Settings.create({});
     }
     
+    const updateData = {};
     if (req.body.tabs !== undefined) {
-      settings.tabs = { ...settings.tabs, ...req.body.tabs };
+      updateData.tabs = { ...settings.tabs, ...req.body.tabs };
     }
     if (req.body.customSections !== undefined) {
-      settings.customSections = req.body.customSections;
+      updateData.customSections = req.body.customSections;
     }
     
-    await settings.save();
+    await settings.update(updateData);
     res.json(settings);
   } catch (error) {
     console.error("Error updating settings:", error);

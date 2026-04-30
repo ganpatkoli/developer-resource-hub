@@ -17,7 +17,7 @@ export const login = asyncHandler(async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
-  const admin = await Admin.findOne({ email: email.toLowerCase().trim() }).select("+password");
+  const admin = await Admin.findOne({ where: { email: email.toLowerCase().trim() } });
   if (!admin) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
@@ -26,8 +26,8 @@ export const login = asyncHandler(async (req, res) => {
     return res.status(401).json({ message: "Invalid credentials" });
   }
   res.json({
-    token: signToken(admin._id, "admin"),
-    admin: { email: admin.email, id: admin._id },
+    token: signToken(admin.id, "admin"),
+    admin: { email: admin.email, id: admin.id },
   });
 });
 
@@ -41,20 +41,20 @@ export const userLogin = asyncHandler(async (req, res) => {
   const lowerEmail = email.toLowerCase().trim();
 
   // Check Admin first
-  const admin = await Admin.findOne({ email: lowerEmail }).select("+password");
+  const admin = await Admin.findOne({ where: { email: lowerEmail } });
   if (admin) {
     const match = await bcrypt.compare(password, admin.password);
     if (!match) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     return res.json({
-      token: signToken(admin._id, "admin"),
-      user: { email: admin.email, id: admin._id, role: "admin" },
+      token: signToken(admin.id, "admin"),
+      user: { email: admin.email, id: admin.id, role: "admin" },
     });
   }
 
   // If not admin, check User
-  const user = await User.findOne({ email: lowerEmail }).select("+password");
+  const user = await User.findOne({ where: { email: lowerEmail } });
   if (!user) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
@@ -66,8 +66,8 @@ export const userLogin = asyncHandler(async (req, res) => {
     return res.status(401).json({ message: "Invalid credentials" });
   }
   res.json({
-    token: signToken(user._id, "user"),
-    user: { email: user.email, id: user._id, role: "user" },
+    token: signToken(user.id, "user"),
+    user: { email: user.email, id: user.id, role: "user" },
   });
 });
 
@@ -80,19 +80,18 @@ export const userSignup = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Password must be at least 8 characters" });
   }
   const cleanEmail = String(email).toLowerCase().trim();
-  const exists = await User.findOne({ email: cleanEmail });
+  const exists = await User.findOne({ where: { email: cleanEmail } });
   if (exists) {
     return res.status(409).json({ message: "User already exists. Please login." });
   }
   const hash = await bcrypt.hash(String(password), 10);
   const user = await User.create({
     email: cleanEmail,
-    password: hash,
-    oauthProviders: { googleId: null, githubId: null },
+    password: hash
   });
   res.status(201).json({
-    token: signToken(user._id, "user"),
-    user: { email: user.email, id: user._id },
+    token: signToken(user.id, "user"),
+    user: { email: user.email, id: user.id },
   });
 });
 
@@ -125,7 +124,7 @@ function buildSuccessRedirect({ token, user, role }) {
   const q = new URLSearchParams({
     token,
     email: user.email,
-    id: String(user._id),
+    id: String(user.id),
     role: role || "user"
   });
   return `${FRONTEND_SUCCESS_URL}?${q.toString()}`;
@@ -135,21 +134,25 @@ async function upsertOAuthUser({ email, provider, providerId }) {
   const cleanEmail = String(email).toLowerCase().trim();
   
   // Check if Admin exists with this email
-  const admin = await Admin.findOne({ email: cleanEmail });
+  const admin = await Admin.findOne({ where: { email: cleanEmail } });
   if (admin) {
     return { user: admin, role: "admin" };
   }
 
-  const update = provider === "google" ? { "oauthProviders.googleId": providerId } : { "oauthProviders.githubId": providerId };
-  let user = await User.findOneAndUpdate({ email: cleanEmail }, { $set: update }, { new: true });
-  if (!user) {
+  let user = await User.findOne({ where: { email: cleanEmail } });
+  if (user) {
+    if (provider === "google") {
+      user.googleId = providerId;
+    } else {
+      user.githubId = providerId;
+    }
+    await user.save();
+  } else {
     user = await User.create({
       email: cleanEmail,
       password: null,
-      oauthProviders:
-        provider === "google"
-          ? { googleId: providerId, githubId: null }
-          : { githubId: providerId, googleId: null },
+      googleId: provider === "google" ? providerId : null,
+      githubId: provider === "github" ? providerId : null
     });
   }
   return { user, role: "user" };
@@ -208,7 +211,7 @@ export const googleOAuthCallback = asyncHandler(async (req, res) => {
     provider: "google",
     providerId: String(profile.sub || profile.email),
   });
-  const token = signToken(user._id, role);
+  const token = signToken(user.id, role);
   return res.redirect(buildSuccessRedirect({ token, user, role }));
 });
 
@@ -286,6 +289,7 @@ export const githubOAuthCallback = asyncHandler(async (req, res) => {
     provider: "github",
     providerId: String(profile.id || email),
   });
-  const token = signToken(user._id, role);
+  const token = signToken(user.id, role);
   return res.redirect(buildSuccessRedirect({ token, user, role }));
 });
+

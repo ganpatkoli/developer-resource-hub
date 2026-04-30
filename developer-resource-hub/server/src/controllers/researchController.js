@@ -1,4 +1,5 @@
 import { ResearchSubmission } from "../models/ResearchSubmission.js";
+import { Category } from "../models/Category.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 function normalizeKeywords(raw) {
@@ -22,31 +23,32 @@ function parseDate(value) {
 }
 
 export const getResearchSubmissions = asyncHandler(async (_req, res) => {
-  const items = await ResearchSubmission.find().populate("category", "name").sort({ createdAt: -1 }).lean();
+  const items = await ResearchSubmission.findAll({
+    include: [{ model: Category, attributes: ["name"] }],
+    order: [["createdAt", "DESC"]]
+  });
   res.json(items);
 });
 
 export const getPublicResearchSubmissions = asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 12));
-  const skip = (page - 1) * limit;
+  const offset = (page - 1) * limit;
 
-  const [items, total] = await Promise.all([
-    ResearchSubmission.find()
-      .populate("category", "name")
-      .sort({ dateOfSubmission: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    ResearchSubmission.countDocuments(),
-  ]);
+  const { count, rows } = await ResearchSubmission.findAndCountAll({
+    include: [{ model: Category, attributes: ["name"] }],
+    order: [["dateOfSubmission", "DESC"], ["createdAt", "DESC"]],
+    offset,
+    limit,
+    distinct: true
+  });
 
-  const totalPages = Math.ceil(total / limit) || 1;
+  const totalPages = Math.ceil(count / limit) || 1;
   res.json({
-    data: items,
+    data: rows,
     page,
     limit,
-    total,
+    total: count,
     totalPages,
   });
 });
@@ -64,13 +66,15 @@ export const createResearchSubmission = asyncHandler(async (req, res) => {
     publishUrl: publishUrl.trim(),
     documentUrl: documentUrl.trim(),
     keywords: normalizeKeywords(keywords),
-    category,
+    categoryId: category,
   });
   res.status(201).json(created);
 });
 
 export const getResearchSubmission = asyncHandler(async (req, res) => {
-  const item = await ResearchSubmission.findById(req.params.id).populate("category", "name").lean();
+  const item = await ResearchSubmission.findByPk(req.params.id, {
+    include: [{ model: Category, attributes: ["name"] }]
+  });
   if (!item) {
     return res.status(404).json({ message: "Research submission not found" });
   }
@@ -83,30 +87,30 @@ export const updateResearchSubmission = asyncHandler(async (req, res) => {
   if (!title?.trim() || !description?.trim() || !publishUrl?.trim() || !documentUrl?.trim() || !parsedDate) {
     return res.status(400).json({ message: "title, description, dateOfSubmission, publishUrl, documentUrl are required" });
   }
-  const updated = await ResearchSubmission.findByIdAndUpdate(
-    req.params.id,
-    {
-      title: title.trim(),
-      description: description.trim(),
-      dateOfSubmission: parsedDate,
-      publishUrl: publishUrl.trim(),
-      documentUrl: documentUrl.trim(),
-      keywords: normalizeKeywords(keywords),
-      category,
-    },
-    { new: true, runValidators: true }
-  );
-  if (!updated) {
+  const item = await ResearchSubmission.findByPk(req.params.id);
+  if (!item) {
     return res.status(404).json({ message: "Research submission not found" });
   }
-  res.json(updated);
+  
+  await item.update({
+    title: title.trim(),
+    description: description.trim(),
+    dateOfSubmission: parsedDate,
+    publishUrl: publishUrl.trim(),
+    documentUrl: documentUrl.trim(),
+    keywords: normalizeKeywords(keywords),
+    categoryId: category,
+  });
+  
+  res.json(item);
 });
 
 export const deleteResearchSubmission = asyncHandler(async (req, res) => {
-  const deleted = await ResearchSubmission.findByIdAndDelete(req.params.id);
-  if (!deleted) {
+  const item = await ResearchSubmission.findByPk(req.params.id);
+  if (!item) {
     return res.status(404).json({ message: "Research submission not found" });
   }
+  await item.destroy();
   res.json({ message: "Research submission deleted" });
 });
 
@@ -153,14 +157,17 @@ export const importResearchBulk = asyncHandler(async (req, res) => {
 
     const category = pickField(row, ["category", "categoryId", "category_id"]);
 
-    const result = await ResearchSubmission.updateOne(
-      { publishUrl },
-      { $set: { title, description, dateOfSubmission: parsedDate, publishUrl, documentUrl, keywords, category } },
-      { upsert: true }
-    );
-    if (result.upsertedCount) created += 1;
-    else if (result.modifiedCount) updated += 1;
-    else skipped += 1;
+    const [item, isNew] = await ResearchSubmission.findOrCreate({
+      where: { publishUrl },
+      defaults: { title, description, dateOfSubmission: parsedDate, publishUrl, documentUrl, keywords, categoryId: category }
+    });
+
+    if (isNew) {
+      created += 1;
+    } else {
+      await item.update({ title, description, dateOfSubmission: parsedDate, documentUrl, keywords, categoryId: category });
+      updated += 1;
+    }
   }
 
   res.json({
@@ -174,14 +181,12 @@ export const importResearchBulk = asyncHandler(async (req, res) => {
 });
 
 export const incrementResearchViews = asyncHandler(async (req, res) => {
-  const item = await ResearchSubmission.findByIdAndUpdate(
-    req.params.id,
-    { $inc: { views: 1 } },
-    { new: true }
-  );
+  const item = await ResearchSubmission.findByPk(req.params.id);
   if (!item) {
     return res.status(404).json({ message: "Research submission not found" });
   }
+  item.views += 1;
+  await item.save();
   res.json({ success: true, views: item.views });
 });
 

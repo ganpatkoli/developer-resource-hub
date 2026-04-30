@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { Post } from "../models/Post.js";
 import { Category } from "../models/Category.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -11,43 +12,44 @@ export const getPosts = asyncHandler(async (req, res) => {
   const search = req.query.search ? String(req.query.search).trim() : "";
   const type = req.query.type ? String(req.query.type).trim() : "";
 
-  const filter = {};
+  const where = {};
   if (type && isValidType(type)) {
-    filter.type = type;
+    where.type = type;
   }
   if (categoryId) {
-    filter.category = categoryId;
+    where.categoryId = categoryId;
   }
   if (search) {
-    filter.title = { $regex: search, $options: "i" };
+    where.title = { [Op.iLike]: `%${search}%` };
   }
 
-  const skip = (page - 1) * limit;
+  const offset = (page - 1) * limit;
   const sortField = req.query.sort || "createdAt";
-  const sortOrder = req.query.order === "asc" ? 1 : -1;
+  const sortOrder = req.query.order === "asc" ? "ASC" : "DESC";
 
-  const [items, total] = await Promise.all([
-    Post.find(filter)
-      .populate("category", "name")
-      .sort({ [sortField]: sortOrder })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Post.countDocuments(filter),
-  ]);
+  const { count, rows } = await Post.findAndCountAll({
+    where,
+    include: [{ model: Category, attributes: ["name"] }],
+    order: [[sortField, sortOrder]],
+    offset,
+    limit,
+    distinct: true
+  });
 
-  const totalPages = Math.ceil(total / limit) || 1;
+  const totalPages = Math.ceil(count / limit) || 1;
   res.json({
-    data: items,
+    data: rows,
     page,
     limit,
-    total,
+    total: count,
     totalPages,
   });
 });
 
 export const getPost = asyncHandler(async (req, res) => {
-  const post = await Post.findById(req.params.id).populate("category", "name");
+  const post = await Post.findByPk(req.params.id, {
+    include: [{ model: Category, attributes: ["name"] }]
+  });
   if (!post) {
     return res.status(404).json({ message: "Post not found" });
   }
@@ -62,7 +64,7 @@ export const createPost = asyncHandler(async (req, res) => {
   if (!isValidType(type)) {
     return res.status(400).json({ message: 'type must be "repo", "news", or "website"' });
   }
-  const cat = await Category.findById(category);
+  const cat = await Category.findByPk(category);
   if (!cat) {
     return res.status(400).json({ message: "Invalid category" });
   }
@@ -71,44 +73,52 @@ export const createPost = asyncHandler(async (req, res) => {
     description: description.trim(),
     link: link.trim(),
     type,
-    category,
+    categoryId: category,
   });
-  const populated = await Post.findById(post._id).populate("category", "name");
+  const populated = await Post.findByPk(post.id, {
+    include: [{ model: Category, attributes: ["name"] }]
+  });
   res.status(201).json(populated);
 });
 
 export const updatePost = asyncHandler(async (req, res) => {
   const { title, description, link, type, category } = req.body;
-  const post = await Post.findById(req.params.id);
+  const post = await Post.findByPk(req.params.id);
   if (!post) {
     return res.status(404).json({ message: "Post not found" });
   }
-  if (title !== undefined) post.title = String(title).trim();
-  if (description !== undefined) post.description = String(description).trim();
-  if (link !== undefined) post.link = String(link).trim();
+  
+  const updateData = {};
+  if (title !== undefined) updateData.title = String(title).trim();
+  if (description !== undefined) updateData.description = String(description).trim();
+  if (link !== undefined) updateData.link = String(link).trim();
   if (type !== undefined) {
     if (!isValidType(type)) {
       return res.status(400).json({ message: 'type must be "repo", "news", or "website"' });
     }
-    post.type = type;
+    updateData.type = type;
   }
   if (category !== undefined) {
-    const cat = await Category.findById(category);
+    const cat = await Category.findByPk(category);
     if (!cat) {
       return res.status(400).json({ message: "Invalid category" });
     }
-    post.category = category;
+    updateData.categoryId = category;
   }
-  await post.save();
-  const populated = await Post.findById(post._id).populate("category", "name");
+  
+  await post.update(updateData);
+  const populated = await Post.findByPk(post.id, {
+    include: [{ model: Category, attributes: ["name"] }]
+  });
   res.json(populated);
 });
 
 export const deletePost = asyncHandler(async (req, res) => {
-  const post = await Post.findByIdAndDelete(req.params.id);
+  const post = await Post.findByPk(req.params.id);
   if (!post) {
     return res.status(404).json({ message: "Post not found" });
   }
+  await post.destroy();
   res.json({ message: "Post removed" });
 });
 
@@ -122,8 +132,11 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
   }
 
   const categoryIds = [...new Set(items.map((item) => String(item?.category || "")).filter(Boolean))];
-  const categories = await Category.find({ _id: { $in: categoryIds } }).select("_id").lean();
-  const validCategorySet = new Set(categories.map((c) => String(c._id)));
+  const categories = await Category.findAll({ 
+    where: { id: { [Op.in]: categoryIds } },
+    attributes: ["id"] 
+  });
+  const validCategorySet = new Set(categories.map((c) => String(c.id)));
 
   let created = 0;
   let updated = 0;
@@ -154,15 +167,17 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
       continue;
     }
 
-    const result = await Post.updateOne(
-      { link, type },
-      { $set: { title, description, link, type, category } },
-      { upsert: true }
-    );
+    const [post, isNew] = await Post.findOrCreate({
+      where: { link, type },
+      defaults: { title, description, link, type, categoryId: category }
+    });
 
-    if (result.upsertedCount) created += 1;
-    else if (result.modifiedCount) updated += 1;
-    else skipped += 1;
+    if (isNew) {
+      created += 1;
+    } else {
+      await post.update({ title, description, categoryId: category });
+      updated += 1;
+    }
   }
 
   res.json({
@@ -176,14 +191,12 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
 });
 
 export const incrementViews = asyncHandler(async (req, res) => {
-  const post = await Post.findByIdAndUpdate(
-    req.params.id,
-    { $inc: { views: 1 } },
-    { new: true }
-  );
+  const post = await Post.findByPk(req.params.id);
   if (!post) {
     return res.status(404).json({ message: "Post not found" });
   }
+  post.views += 1;
+  await post.save();
   res.json({ success: true, views: post.views });
 });
 

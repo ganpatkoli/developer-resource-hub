@@ -1,15 +1,28 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.js";
+import User from "./User.js";
+import Post from "./Post.js";
 
-const userFavoriteSchema = new mongoose.Schema(
-  {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    post: { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: null },
-    userResource: { type: mongoose.Schema.Types.ObjectId, ref: "UserResource", default: null },
-  },
-  { timestamps: true }
-);
+export const UserFavorite = sequelize.define("UserFavorite", {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
+  }
+}, {
+  timestamps: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ["userId", "postId"],
+      where: {
+        postId: { [DataTypes.Op.ne]: null }
+      }
+    }
+  ]
+});
 
-userFavoriteSchema.index({ user: 1, post: 1 }, { unique: true, sparse: true });
-userFavoriteSchema.index({ user: 1, userResource: 1 }, { unique: true, sparse: true });
+UserFavorite.belongsTo(User, { foreignKey: "userId" });
+UserFavorite.belongsTo(Post, { foreignKey: "postId" });
 
-export const UserFavorite = mongoose.model("UserFavorite", userFavoriteSchema);
+export default UserFavorite;
