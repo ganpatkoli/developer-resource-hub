@@ -1,4 +1,4 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Op } from "sequelize";
 import sequelize from "../config/db.js";
 import User from "./User.js";
 import Post from "./Post.js";
@@ -16,7 +16,7 @@ export const UserFavorite = sequelize.define("UserFavorite", {
       unique: true,
       fields: ["userId", "postId"],
       where: {
-        postId: { [DataTypes.Op.ne]: null }
+        postId: { [Op.ne]: null }
       }
     }
   ]
