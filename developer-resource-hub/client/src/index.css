@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-surface: #ffffff;
+    --color-surface-muted: #f8fafc; /* slate-50 */
+    --color-ink: #0f172a; /* slate-900 */
+    --color-ink-muted: #64748b; /* slate-500 */
+    --color-border: #e2e8f0; /* slate-200 */
+    --color-brand: #0284c7; /* sky-600 */
+  }
+
+  .dark {
+    --color-surface: #10131a;
+    --color-surface-muted: #161b22;
+    --color-ink: #e1e2eb;
+    --color-ink-muted: #849495;
+    --color-border: #3b494b;
+    --color-brand: #00dbe9;
+  }
+
+  body {
+    @apply bg-surface text-ink transition-colors duration-200;
+  }
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+@keyframes scroll-hint { 0%, 100% { transform: translateX(-100%); } 50% { transform: translateX(200%); } }
+.animate-scroll-hint { animation: scroll-hint 3s ease-in-out infinite; }
