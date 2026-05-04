@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://api.aiguardian.cloud/",
+        target: "http://localhost:9000",
         changeOrigin: true,
       },
     },

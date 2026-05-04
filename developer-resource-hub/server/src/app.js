@@ -14,14 +14,15 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 const app = express();
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow all origins for now to resolve CORS issues
-    callback(null, true);
-  },
+  origin: ["http://localhost:5173", "http://localhost:3000"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url} - Origin: ${req.headers.origin}`);
+  next();
+});
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
