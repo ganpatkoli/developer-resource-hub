@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import client from "../api/client";
-import { 
-  Search, 
-  Database, 
-  Globe, 
-  Eye, 
-  Zap, 
-  Bell, 
-  Settings as SettingsIcon, 
-  UserCircle, 
-  ChevronRight, 
+import {
+  Search,
+  Database,
+  Globe,
+  Eye,
+  Zap,
+  Bell,
+  Settings as SettingsIcon,
+  UserCircle,
+  ChevronRight,
   ChevronDown,
   Download,
   Terminal,
@@ -91,7 +91,7 @@ function HeroSlider() {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-[#0B0F19] via-[#0B0F19]/90 to-transparent z-10" />
           <img src={slide.image} className="h-full w-full object-cover object-right" alt="" />
-          
+
           <div className="absolute inset-0 z-20 flex flex-col justify-center px-6 md:px-12 max-w-3xl">
             <div className="flex items-center gap-3 mb-4 md:mb-6">
               <span className="bg-red-500/20 text-red-400 text-[8px] md:text-[10px] font-black tracking-widest px-2 md:px-3 py-1 rounded border border-red-500/30 uppercase">
@@ -118,7 +118,7 @@ function HeroSlider() {
           </div>
         </div>
       ))}
-      
+
       <div className="absolute bottom-6 right-6 md:bottom-10 md:right-12 z-30 flex gap-2 md:gap-3">
         {slides.map((_, idx) => (
           <button
@@ -167,13 +167,13 @@ function RepoCard({ item }) {
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-full border border-[#1A2333] overflow-hidden flex items-center justify-center bg-black shadow-[0_0_15px_rgba(249,115,22,0.1)]">
-             {/* Mimicking the orange pixel logo from the screenshot */}
-             <div className="grid grid-cols-2 gap-0.5">
-                <div className="w-2 h-2 bg-orange-500" />
-                <div className="w-2 h-2 bg-orange-600" />
-                <div className="w-2 h-2 bg-orange-400" />
-                <div className="w-2 h-2 bg-orange-500" />
-             </div>
+            {/* Mimicking the orange pixel logo from the screenshot */}
+            <div className="grid grid-cols-2 gap-0.5">
+              <div className="w-2 h-2 bg-orange-500" />
+              <div className="w-2 h-2 bg-orange-600" />
+              <div className="w-2 h-2 bg-orange-400" />
+              <div className="w-2 h-2 bg-orange-500" />
+            </div>
           </div>
           <div className="flex flex-col">
             <h3 className={`font-black text-[15px] tracking-tight truncate max-w-[180px] ${dark ? "text-white" : "text-slate-900"}`}>
@@ -192,7 +192,7 @@ function RepoCard({ item }) {
           {item.description || "Low-level diagnostic toolkit for real-time memory inspection and automated kernel-mode threat detection in distributed systems."}
         </p>
       </div>
-      
+
       <div className="flex items-center gap-5 mb-8 text-[11px] font-black tracking-widest text-slate-500 uppercase">
         <div className="flex items-center gap-1.5"><Star size={16} className="text-cyan-400/60" /> {item.stars || "12.4k"}</div>
         <div className="flex items-center gap-1.5"><GitFork size={16} className="text-cyan-400/60" /> {item.forks || "842"}</div>
@@ -203,9 +203,9 @@ function RepoCard({ item }) {
         </div>
       </div>
 
-      <a 
-        href={item.link} 
-        target="_blank" 
+      <a
+        href={item.link}
+        target="_blank"
         rel="noopener noreferrer"
         className={`w-full py-4 rounded-xl border border-cyan-500/20 font-black text-[11px] tracking-[0.25em] uppercase text-center transition-all ${dark ? "bg-black/40 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:border-cyan-500" : "bg-cyan-50 border-cyan-100 text-cyan-600 hover:bg-cyan-600 hover:text-white"}`}
       >
@@ -257,16 +257,16 @@ function NewsCard({ item }) {
   const { dark } = useTheme();
   const defaultImg = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800";
   return (
-    <a 
-      href={item.link} 
-      target="_blank" 
+    <a
+      href={item.link}
+      target="_blank"
       rel="noopener noreferrer"
       className={`block rounded-2xl border transition-all group overflow-hidden h-full ${dark ? "bg-[#161b22] border-[#3b494b] hover:border-cyan-500/50" : "bg-white border-slate-200 shadow-lg shadow-slate-100 hover:border-cyan-400"}`}
     >
       <div className="aspect-video w-full overflow-hidden relative">
-        <img 
-          src={item.enclosure?.link || item.thumbnail || defaultImg} 
-          alt="intel" 
+        <img
+          src={item.enclosure?.link || item.thumbnail || defaultImg}
+          alt="intel"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-60 group-hover:opacity-100"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#161b22] to-transparent opacity-60" />
@@ -338,7 +338,7 @@ export default function Home() {
   // Parallel Continuous Auto-scroll logic using requestAnimationFrame for maximum smoothness
   useEffect(() => {
     if (loading) return;
-    
+
     const carouselIds = ["news-carousel", "repos-carousel", "knowledge-carousel", "resource-carousel"];
     const scrollSpeed = 0.8; // Slightly faster for visibility
     let animationFrameId;
@@ -355,7 +355,7 @@ export default function Home() {
         if (!el || pausedState[id]) return;
 
         const halfWidth = el.scrollWidth / 2;
-        
+
         // Alternate directions: Repos and Resource Hub move Right-to-Left (Reverse)
         if (id === "repos-carousel" || id === "resource-carousel") {
           if (el.scrollLeft <= 0) {
@@ -417,20 +417,20 @@ export default function Home() {
         <HeroSlider />
 
         {activeTab === "ALL" && (
-          <div className="space-y-24 pb-32">
+          <div className="space-y-4 pb-32">
             <div className="flex flex-col gap-24">
               {/* Horizontal News Carousel Section */}
               <section className="min-w-0 mt-4">
                 <SectionHeader title="LATEST_INTEL" count={news.length} link="/news" live />
-                
-              
+
+
 
                 <div className="relative group/carousel">
                   {/* Edge Fades */}
                   <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
                   <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
-                  
-                  <div 
+
+                  <div
                     id="news-carousel"
                     className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
                   >
@@ -448,7 +448,7 @@ export default function Home() {
 
                   {/* Carousel Controls */}
                   <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                    <button 
+                    <button
                       onClick={() => document.getElementById("news-carousel").scrollBy({ left: -400, behavior: "smooth" })}
                       className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
                     >
@@ -456,7 +456,7 @@ export default function Home() {
                     </button>
                   </div>
                   <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                    <button 
+                    <button
                       onClick={() => document.getElementById("news-carousel").scrollBy({ left: 400, behavior: "smooth" })}
                       className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
                     >
@@ -471,49 +471,49 @@ export default function Home() {
             <AdBanner position="HOME_BANNER" />
 
             {/* Repos Section Carousel */}
-            <section>
-              <SectionHeader title="CODE_REPOS" link="/repos" count={repos.length || "48"} />
-              <div className="relative group/carousel">
-                <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
-                <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
-                
-                <div 
-                  id="repos-carousel"
-                  className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
-                >
-                  {[...repos, ...repos].map((repo, idx) => (
-                    <div key={`${repo._id}-${idx}`} className="min-w-[300px] md:min-w-[400px]">
-                      <RepoCard item={repo} />
-                    </div>
-                  ))}
-                  {repos.length === 0 && [...Array(8)].map((_, i) => (
-                    <div key={i} className="min-w-[300px] md:min-w-[400px]">
-                      <RepoCard item={{ title: `system-module-${i}`, description: "Low-level system module for central processing units." }} />
-                    </div>
-                  ))}
-                </div>
+            {/* <section> */}
+            <SectionHeader title="CODE_REPOS" link="/repos" count={repos.length || "48"} />
+            <div className="relative group/carousel">
+              <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
 
-                <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                  <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: -400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
-                    <ChevronDown size={20} className="rotate-90" />
-                  </button>
-                </div>
-                <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                  <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: 400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
-                    <ChevronDown size={20} className="-rotate-90" />
-                  </button>
-                </div>
+              <div
+                id="repos-carousel"
+                className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
+              >
+                {[...repos, ...repos].map((repo, idx) => (
+                  <div key={`${repo._id}-${idx}`} className="min-w-[300px] md:min-w-[400px]">
+                    <RepoCard item={repo} />
+                  </div>
+                ))}
+                {repos.length === 0 && [...Array(8)].map((_, i) => (
+                  <div key={i} className="min-w-[300px] md:min-w-[400px]">
+                    <RepoCard item={{ title: `system-module-${i}`, description: "Low-level system module for central processing units." }} />
+                  </div>
+                ))}
               </div>
-            </section>
+
+              <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: -400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                  <ChevronDown size={20} className="rotate-90" />
+                </button>
+              </div>
+              <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: 400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                  <ChevronDown size={20} className="-rotate-90" />
+                </button>
+              </div>
+            </div>
+            {/* </section> */}
 
             {/* Knowledge Stream Carousel */}
-            <section>
+            <section className="mt-3">
               <SectionHeader title="KNOWLEDGE_STREAM" link="/research" count={research.length || "24"} />
               <div className="relative group/carousel">
                 <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
                 <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
-                
-                <div 
+
+                <div
                   id="knowledge-carousel"
                   className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
                 >
@@ -546,7 +546,7 @@ export default function Home() {
             <section className="pb-32">
               <SectionHeader title="RESOURCE_HUB" count="12" />
               <div className="relative group/carousel">
-                <div 
+                <div
                   id="resource-carousel"
                   className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
                 >

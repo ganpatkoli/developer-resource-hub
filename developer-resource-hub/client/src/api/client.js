@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const FALLBACK_API_URL = "http://localhost:5000/api";
+const FALLBACK_API_URL = "https://api.aiguardian.cloud/api";
 export const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "/api" : FALLBACK_API_URL);
 
 const client = axios.create({
