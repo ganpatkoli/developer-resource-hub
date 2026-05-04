@@ -324,7 +324,7 @@ export default function Home() {
         await Promise.allSettled([
           fetchNews(),
           client.get("/posts?limit=12&type=repository").then(res => setRepos(res.data.data)),
-          client.get("/research?limit=12").then(res => setResearch(res.data.data))
+          client.get("/research/public?limit=12").then(res => setResearch(res.data.data))
         ]);
       } catch (err) {
         console.error("Initialization Error:", err);
