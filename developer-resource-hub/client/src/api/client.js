@@ -1,13 +1,13 @@
-import axios from "axios";
+// import axios from "axios";
 
-const FALLBACK_API_URL = "http://api.aiguardian.cloud/";
-export const API_BASE_URL = import.meta.env.DEV ? "/api" : (import.meta.env.VITE_API_URL || FALLBACK_API_URL);
+// const FALLBACK_API_URL = "http://api.aiguardian.cloud/";
+// export const API_BASE_URL = import.meta.env.DEV ? "/api" : (import.meta.env.VITE_API_URL || FALLBACK_API_URL);
 
-const client = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-  headers: { "Content-Type": "application/json" },
-});
+// const client = axios.create({
+//   baseURL: API_BASE_URL,
+//   withCredentials: true,
+//   headers: { "Content-Type": "application/json" },
+// });
 
 export const ADMIN_TOKEN_KEY = "dhub_token";
 export const USER_TOKEN_KEY = "dhub_user_token";
@@ -48,50 +48,67 @@ export function setUserInfo(info) {
   else localStorage.removeItem(USER_INFO_KEY);
 }
 
-/** @deprecated use getAdminToken */
-export const getToken = getAdminToken;
-/** @deprecated use setAdminToken */
-export const setToken = setAdminToken;
+// /** @deprecated use getAdminToken */
+// export const getToken = getAdminToken;
+// /** @deprecated use setAdminToken */
+// export const setToken = setAdminToken;
 
-client.interceptors.request.use((config) => {
-  if (config.authType === "admin" && getAdminToken()) {
-    config.headers.Authorization = `Bearer ${getAdminToken()}`;
-  } else if (config.authType === "user" && getUserToken()) {
-    config.headers.Authorization = `Bearer ${getUserToken()}`;
+// client.interceptors.request.use((config) => {
+//   if (config.authType === "admin" && getAdminToken()) {
+//     config.headers.Authorization = `Bearer ${getAdminToken()}`;
+//   } else if (config.authType === "user" && getUserToken()) {
+//     config.headers.Authorization = `Bearer ${getUserToken()}`;
+//   }
+//   return config;
+// });
+
+// function isAuthLoginUrl(url) {
+//   if (!url) return false;
+//   return /auth\/login$/.test(url) || /auth\/user\/login$/.test(url);
+// }
+
+// client.interceptors.response.use(
+//   (res) => res,
+//   (err) => {
+//     if (err.response?.status === 401) {
+//       const url = err.config?.url || "";
+//       if (isAuthLoginUrl(url)) {
+//         return Promise.reject(err);
+//       }
+//       if (err.config?.authType === "admin" && getAdminToken()) {
+//         setAdminToken(null);
+//         if (
+//           window.location.pathname.startsWith("/admin") &&
+//           !window.location.pathname.includes("login")
+//         ) {
+//           window.location.replace("/admin/login");
+//         }
+//       } else if (err.config?.authType === "user" && getUserToken()) {
+//         setUserToken(null);
+//         if (window.location.pathname.startsWith("/user/")) {
+//           window.location.replace("/user/login");
+//         }
+//       }
+//     }
+//     return Promise.reject(err);
+//   }
+// );
+
+// export default client;
+
+
+
+import axios from "axios";
+
+const FALLBACK_API_URL = "https://api.aiguardian.cloud/";
+export const API_BASE_URL = import.meta.env.DEV ? "/api" : (import.meta.env.VITE_API_URL || FALLBACK_API_URL);
+
+const client = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true, // Important for cookies/sessions
+  headers: {
+    "Content-Type": "application/json",
   }
-  return config;
 });
-
-function isAuthLoginUrl(url) {
-  if (!url) return false;
-  return /auth\/login$/.test(url) || /auth\/user\/login$/.test(url);
-}
-
-client.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      const url = err.config?.url || "";
-      if (isAuthLoginUrl(url)) {
-        return Promise.reject(err);
-      }
-      if (err.config?.authType === "admin" && getAdminToken()) {
-        setAdminToken(null);
-        if (
-          window.location.pathname.startsWith("/admin") &&
-          !window.location.pathname.includes("login")
-        ) {
-          window.location.replace("/admin/login");
-        }
-      } else if (err.config?.authType === "user" && getUserToken()) {
-        setUserToken(null);
-        if (window.location.pathname.startsWith("/user/")) {
-          window.location.replace("/user/login");
-        }
-      }
-    }
-    return Promise.reject(err);
-  }
-);
 
 export default client;
