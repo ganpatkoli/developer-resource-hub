@@ -1,7 +1,15 @@
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: resolve(__dirname, "../../.env") });
+
+if (!process.env.PG_URI) {
+  throw new Error("PG_URI is missing. Ensure server/.env is present and has PG_URI.");
+}
 
 const sequelize = new Sequelize(process.env.PG_URI, {
   dialect: "postgres",

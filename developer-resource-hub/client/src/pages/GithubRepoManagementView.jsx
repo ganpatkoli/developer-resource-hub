@@ -18,6 +18,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { useAdminUI } from "../context/AdminUIContext";
 
 export default function GithubRepoManagementView() {
+  const PAGE_SIZE = 20;
   const { toggleSidebar } = useAdminUI();
   const navigate = useNavigate();
   const [repos, setRepos] = useState([]);
@@ -26,47 +27,54 @@ export default function GithubRepoManagementView() {
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [githubMetaMap, setGithubMetaMap] = useState({});
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const getCategory = (item) => item?.category || item?.Category || null;
 
   // ... (parseGithubRepo and formatCount remain same)
 
-  async function loadData() {
+  async function loadData(pageToLoad = 1) {
     setLoading(true);
     try {
       const [postRes, catRes] = await Promise.all([
-        client.get("/posts", { params: { type: "repo", limit: 500 } }),
+        client.get("/posts", {
+          params: {
+            type: "repo",
+            limit: PAGE_SIZE,
+            page: pageToLoad,
+            ...(query.trim() ? { search: query.trim() } : {}),
+            ...(activeFilter !== "ALL" ? { category: activeFilter } : {}),
+          },
+        }),
         client.get("/categories?type=repo")
       ]);
       setRepos(postRes.data?.data || []);
-      setCategories(catRes.data || []);
+      setPage(postRes.data?.page || pageToLoad);
+      setTotalPages(postRes.data?.totalPages || 1);
+      setCategories(Array.isArray(catRes.data) ? catRes.data : (catRes.data?.data || []));
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData(1);
+  }, [query, activeFilter]);
 
   // ... (loadMeta effect remains same)
 
   const filteredRepos = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let result = repos;
-    
-    if (activeFilter !== "ALL") {
-      result = result.filter(repo => repo.category?._id === activeFilter);
-    }
-    
-    if (q) {
-      result = result.filter((repo) => {
-        const title = String(repo.title || "").toLowerCase();
-        const description = String(repo.description || "").toLowerCase();
-        const catName = String(repo.category?.name || "").toLowerCase();
-        return title.includes(q) || description.includes(q) || catName.includes(q);
-      });
-    }
-    
-    return result;
+    return (repos || []).filter((repo) => {
+      const categoryId = String(getCategory(repo)?.id || repo.categoryId || "");
+      const matchesCategory = activeFilter === "ALL" || categoryId === String(activeFilter);
+      if (!matchesCategory) return false;
+      if (!q) return true;
+      const title = String(repo.title || "").toLowerCase();
+      const description = String(repo.description || "").toLowerCase();
+      const categoryName = String(getCategory(repo)?.name || "").toLowerCase();
+      return title.includes(q) || description.includes(q) || categoryName.includes(q);
+    });
   }, [repos, query, activeFilter]);
 
   async function onDelete(repoId) {
@@ -74,7 +82,7 @@ export default function GithubRepoManagementView() {
     if (!ok) return;
     try {
       await client.delete(`/posts/${repoId}`, { authType: "admin" });
-      await loadData();
+      await loadData(page);
     } catch {}
   }
 
@@ -126,10 +134,10 @@ export default function GithubRepoManagementView() {
                </button>
                {categories.map((cat) => (
                   <button
-                    key={cat._id}
-                    onClick={() => setActiveFilter(cat._id)}
+                    key={cat.id}
+                    onClick={() => setActiveFilter(cat.id)}
                     className={`shrink-0 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${
-                      activeFilter === cat._id 
+                      activeFilter === cat.id 
                       ? "border-[#00dbe9] text-[#00dbe9] bg-[#00dbe9]/5" 
                       : "border-transparent text-[#849495] hover:text-[#e1e2eb]"
                     }`}
@@ -166,7 +174,7 @@ export default function GithubRepoManagementView() {
                     )}
                     {!loading &&
                       filteredRepos.map((repo) => (
-                        <tr key={repo._id} className="transition-all hover:bg-[#272a31]/50 group">
+                        <tr key={repo.id} className="transition-all hover:bg-[#272a31]/50 group">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]/30 group-hover:border-[#00dbe9] transition-all">
@@ -183,15 +191,15 @@ export default function GithubRepoManagementView() {
                           <td className="max-w-[360px] px-6 py-4 text-sm text-[#b9cacb] leading-relaxed line-clamp-2">{repo.description}</td>
                           <td className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-[#849495]">
                             <span className="px-2 py-1 border border-[#3b494b] bg-[#10131a]">
-                              {repo.category?.name || "Uncategorized"}
+                              {getCategory(repo)?.name || "Uncategorized"}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => navigate(`/admin/repos/${repo._id}/edit`)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ebb2ff] hover:border-[#ebb2ff] transition-all">
+                              <button onClick={() => navigate(`/admin/repos/${repo.id}/edit`)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ebb2ff] hover:border-[#ebb2ff] transition-all">
                                 <Pencil size={15} />
                               </button>
-                              <button onClick={() => onDelete(repo._id)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ffb4ab] hover:border-[#ffb4ab] transition-all">
+                              <button onClick={() => onDelete(repo.id)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ffb4ab] hover:border-[#ffb4ab] transition-all">
                                 <Trash2 size={15} />
                               </button>
                             </div>
@@ -207,6 +215,25 @@ export default function GithubRepoManagementView() {
                     )}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between px-6 py-3 border-t border-[#3b494b] text-xs font-bold text-[#849495]">
+                <span>Page {page} of {totalPages}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => loadData(page - 1)}
+                    disabled={loading || page <= 1}
+                    className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => loadData(page + 1)}
+                    disabled={loading || page >= totalPages}
+                    className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </section>
           </main>
@@ -238,7 +265,7 @@ export default function GithubRepoManagementView() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="SEARCH_REPOS..."
+                placeholder="SEARCH REPOS..."
                 className="bg-transparent text-sm font-bold outline-none placeholder:text-[#849495]/50 text-[#e1e2eb] uppercase tracking-widest w-full"
               />
             </div>
@@ -261,10 +288,10 @@ export default function GithubRepoManagementView() {
              </button>
              {categories.map((cat) => (
                 <button
-                  key={cat._id}
-                  onClick={() => setActiveFilter(cat._id)}
+                  key={cat.id}
+                  onClick={() => setActiveFilter(cat.id)}
                   className={`shrink-0 px-5 py-2.5 text-[9px] font-bold uppercase tracking-[0.2em] transition-all border ${
-                    activeFilter === cat._id 
+                    activeFilter === cat.id 
                     ? "border-[#00dbe9] bg-[#00dbe9]/10 text-[#00dbe9]" 
                     : "border-[#3b494b] bg-[#161b22] text-[#849495]"
                   }`}
@@ -278,7 +305,7 @@ export default function GithubRepoManagementView() {
             {loading && <p className="text-center py-10 text-[10px] font-bold uppercase tracking-widest text-[#849495]">Loading database...</p>}
             {!loading &&
               filteredRepos.map((repo) => (
-                <article key={repo._id} className="border border-[#3b494b] bg-[#161b22]/70 p-5 backdrop-blur-md">
+                <article key={repo.id} className="border border-[#3b494b] bg-[#161b22]/70 p-5 backdrop-blur-md">
                   <div className="flex items-start gap-3">
                     <div className="mt-1 flex items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]/30 h-10 w-10 shrink-0">
                       <GitBranch size={16} />
@@ -288,18 +315,18 @@ export default function GithubRepoManagementView() {
                       <p className="mt-2 text-xs text-[#b9cacb] line-clamp-2 leading-relaxed">{repo.description}</p>
                       
                       <p className="mt-4 text-[9px] font-bold uppercase tracking-[0.15em] text-[#00dbe9] border-t border-[#3b494b]/50 pt-3 flex items-center justify-between">
-                        <span>{repo.category?.name || "General"}</span>
-                        {githubMetaMap[repo._id] && (
-                          <span className="text-[#ebb2ff]">★ {formatCount(githubMetaMap[repo._id].stars)}</span>
+                        <span>{getCategory(repo)?.name || "General"}</span>
+                        {githubMetaMap[repo.id] && (
+                          <span className="text-[#ebb2ff]">★ {formatCount(githubMetaMap[repo.id].stars)}</span>
                         )}
                       </p>
                     </div>
                   </div>
                   <div className="mt-5 flex items-center justify-end gap-4 border-t border-[#3b494b] pt-4">
-                    <button onClick={() => navigate(`/admin/repos/${repo._id}/edit`)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#00dbe9]">
+                    <button onClick={() => navigate(`/admin/repos/${repo.id}/edit`)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#00dbe9]">
                       <Pencil size={18} />
                     </button>
-                    <button onClick={() => onDelete(repo._id)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ffb4ab]">
+                    <button onClick={() => onDelete(repo.id)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ffb4ab]">
                       <Trash2 size={18} />
                     </button>
                   </div>

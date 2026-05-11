@@ -23,7 +23,10 @@ router.post("/meta", async (req, res) => {
     return res.status(400).json({ message: "Valid GitHub repo url is required" });
   }
 
-  const cachedPost = await Post.findOne({ type: "repo", link: rawUrl }).select("githubMeta").lean();
+  const cachedPost = await Post.findOne({ 
+    where: { type: "repo", link: rawUrl },
+    attributes: ["githubMeta"]
+  });
   const cachedMeta = cachedPost?.githubMeta || null;
   const isFreshCache =
     cachedMeta?.cachedAt && Date.now() - new Date(cachedMeta.cachedAt).getTime() < CACHE_TTL_MS;
@@ -91,9 +94,9 @@ router.post("/meta", async (req, res) => {
     cachedAt: new Date(),
   };
 
-  await Post.updateMany(
-    { type: "repo", link: rawUrl },
-    { $set: { githubMeta: meta } }
+  await Post.update(
+    { githubMeta: meta },
+    { where: { type: "repo", link: rawUrl } }
   );
 
   return res.json({ ...meta, cacheHit: false });

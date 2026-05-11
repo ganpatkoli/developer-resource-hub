@@ -52,7 +52,7 @@ export default function AddWebsiteView() {
             title: website.title || "",
             description: website.description || "",
             link: website.link || "",
-            category: website.category?._id || website.category || "",
+            category: website.category?.id || website.category || "",
           });
         }
       } catch (err) {
@@ -98,11 +98,19 @@ export default function AddWebsiteView() {
       setImporting(true);
       const { data } = await client.post("/posts/import", { items: parsed.map(i => ({ ...i, type: "website" })) }, { authType: "admin" });
       setImportResult(data);
-      setImportMessage("Import success!");
+      const rowErrorText = Array.isArray(data?.errors) && data.errors.length
+        ? ` | Row errors: ${data.errors.map(e => `#${e.index}: ${e.message}`).join(" ; ")}`
+        : "";
+      setImportMessage(`Import done: created ${data?.created || 0}, updated ${data?.updated || 0}, skipped ${data?.skipped || 0}${rowErrorText}`);
       setJsonInput("");
       setTimeout(() => navigate("/admin/websites"), 1500);
     } catch (err) {
-      setImportMessage("Import failed: " + (err.message || "Invalid JSON"));
+      const backendMessage = err.response?.data?.message;
+      const rowErrors = err.response?.data?.errors;
+      const rowErrorText = Array.isArray(rowErrors) && rowErrors.length
+        ? ` | Row errors: ${rowErrors.map(e => `#${e.index}: ${e.message}`).join(" ; ")}`
+        : "";
+      setImportMessage("Import failed: " + (backendMessage || err.message || "Invalid JSON") + rowErrorText);
     } finally {
       setImporting(false);
     }
@@ -163,7 +171,7 @@ export default function AddWebsiteView() {
                           className="w-full border border-[#3b494b] bg-[#10131a]/80 px-5 py-4 text-sm font-bold outline-none transition-all focus:border-[#ebb2ff] text-[#e1e2eb]"
                         >
                           <option value="">Choose category...</option>
-                          {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       </div>
                     </div>
@@ -265,7 +273,7 @@ export default function AddWebsiteView() {
                           className="w-full border border-[#3b494b] bg-[#10131a]/80 px-4 py-3 text-xs font-bold focus:border-[#ebb2ff] outline-none text-[#e1e2eb]"
                        >
                           <option value="">Category...</option>
-                          {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                        </select>
                     </div>
                     <div>

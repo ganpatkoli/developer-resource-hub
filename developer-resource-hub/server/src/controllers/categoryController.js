@@ -7,11 +7,29 @@ export const getCategories = asyncHandler(async (req, res) => {
   if (req.query.type) {
     where.type = req.query.type;
   }
-  const categories = await Category.findAll({
+  const hasPaginationParams = req.query.page !== undefined || req.query.limit !== undefined;
+  const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit), 10) || 100));
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await Category.findAndCountAll({
     where,
-    order: [['name', 'ASC']]
+    order: [['name', 'ASC']],
+    offset,
+    limit
   });
-  res.json(categories);
+  if (!hasPaginationParams) {
+    return res.json(rows);
+  }
+
+  const totalPages = Math.ceil(count / limit) || 1;
+  return res.json({
+    data: rows,
+    page,
+    limit,
+    total: count,
+    totalPages
+  });
 });
 
 export const getCategory = asyncHandler(async (req, res) => {

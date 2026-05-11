@@ -17,7 +17,14 @@ import AdminFooter from "../components/AdminFooter";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAdminUI } from "../context/AdminUIContext";
 
+const normalizeExternalUrl = (link) => {
+  if (!link) return "#";
+  if (/^https?:\/\//i.test(link)) return link;
+  return `https://${link}`;
+};
+
 export default function WebsiteManagementView() {
+  const PAGE_SIZE = 20;
   const { toggleSidebar } = useAdminUI();
   const navigate = useNavigate();
   const [websites, setWebsites] = useState([]);
@@ -25,43 +32,50 @@ export default function WebsiteManagementView() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const getCategory = (item) => item?.category || item?.Category || null;
 
-  async function loadData() {
+  async function loadData(pageToLoad = 1) {
     setLoading(true);
     try {
       const [postRes, catRes] = await Promise.all([
-        client.get("/posts", { params: { type: "website", limit: 500 } }),
+        client.get("/posts", {
+          params: {
+            type: "website",
+            limit: PAGE_SIZE,
+            page: pageToLoad,
+            ...(query.trim() ? { search: query.trim() } : {}),
+            ...(activeFilter !== "ALL" ? { category: activeFilter } : {}),
+          }
+        }),
         client.get("/categories?type=website")
       ]);
       setWebsites(postRes.data?.data || []);
-      setCategories(catRes.data || []);
+      setPage(postRes.data?.page || pageToLoad);
+      setTotalPages(postRes.data?.totalPages || 1);
+      setCategories(Array.isArray(catRes.data) ? catRes.data : (catRes.data?.data || []));
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData(1);
+  }, [query, activeFilter]);
 
   const filteredWebsites = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let result = websites;
-    
-    if (activeFilter !== "ALL") {
-      result = result.filter(site => site.category?._id === activeFilter);
-    }
-    
-    if (q) {
-      result = result.filter((site) => {
-        const title = String(site.title || "").toLowerCase();
-        const description = String(site.description || "").toLowerCase();
-        const catName = String(site.category?.name || "").toLowerCase();
-        return title.includes(q) || description.includes(q) || catName.includes(q);
-      });
-    }
-    
-    return result;
+    return (websites || []).filter((website) => {
+      const categoryId = String(getCategory(website)?.id || website.categoryId || "");
+      const matchesCategory = activeFilter === "ALL" || categoryId === String(activeFilter);
+      if (!matchesCategory) return false;
+      if (!q) return true;
+      const title = String(website.title || "").toLowerCase();
+      const description = String(website.description || "").toLowerCase();
+      const categoryName = String(getCategory(website)?.name || "").toLowerCase();
+      return title.includes(q) || description.includes(q) || categoryName.includes(q);
+    });
   }, [websites, query, activeFilter]);
 
   async function onDelete(websiteId) {
@@ -69,7 +83,7 @@ export default function WebsiteManagementView() {
     if (!ok) return;
     try {
       await client.delete(`/posts/${websiteId}`, { authType: "admin" });
-      await loadData();
+      await loadData(page);
     } catch {}
   }
 
@@ -87,7 +101,7 @@ export default function WebsiteManagementView() {
           <main className="px-6 py-8 flex-1">
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-4xl font-bold tracking-tight text-[#e1e2eb] uppercase">Site_Registry</h1>
+                <h1 className="text-4xl font-bold tracking-tight text-[#e1e2eb] uppercase">Site Registry</h1>
                 <p className="mt-1 text-sm font-bold text-[#b9cacb]">External resource indexing and validation.</p>
               </div>
               <div className="flex items-center gap-3">
@@ -102,7 +116,7 @@ export default function WebsiteManagementView() {
                   />
                 </div>
                 <Link to="/admin/websites/new" className="flex h-11 items-center justify-center gap-2 border border-[#ebb2ff] bg-[#ebb2ff]/10 hover:bg-[#ebb2ff]/20 px-6 py-2.5 text-sm font-bold text-[#ebb2ff] uppercase tracking-widest transition-all">
-                  <Plus size={18} /> New_Site
+                  <Plus size={18} /> New Site
                 </Link>
               </div>
             </div>
@@ -117,14 +131,14 @@ export default function WebsiteManagementView() {
                     : "border-transparent text-[#849495] hover:text-[#e1e2eb]"
                   }`}
                >
-                  All_Stations
+                  All Stations
                </button>
                {categories.map((cat) => (
                   <button
-                    key={cat._id}
-                    onClick={() => setActiveFilter(cat._id)}
+                    key={cat.id}
+                    onClick={() => setActiveFilter(cat.id)}
                     className={`shrink-0 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${
-                      activeFilter === cat._id 
+                      activeFilter === cat.id 
                       ? "border-[#ebb2ff] text-[#ebb2ff] bg-[#ebb2ff]/5" 
                       : "border-transparent text-[#849495] hover:text-[#e1e2eb]"
                     }`}
@@ -161,7 +175,7 @@ export default function WebsiteManagementView() {
                     )}
                     {!loading &&
                       filteredWebsites.map((website) => (
-                        <tr key={website._id} className="transition-all hover:bg-[#272a31]/50 group">
+                        <tr key={website.id} className="transition-all hover:bg-[#272a31]/50 group">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 items-center justify-center bg-[#ebb2ff]/10 text-[#ebb2ff] border border-[#ebb2ff]/30 group-hover:border-[#ebb2ff] transition-all">
@@ -169,8 +183,8 @@ export default function WebsiteManagementView() {
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-[#e1e2eb] tracking-wide truncate">{website.title}</p>
-                                <a href={website.link} target="_blank" rel="noreferrer" className="text-[9px] font-bold text-[#ebb2ff]/60 hover:text-[#ebb2ff] uppercase tracking-widest transition-colors">
-                                  Access_Network
+                                <a href={normalizeExternalUrl(website.link)} target="_blank" rel="noreferrer" className="text-[9px] font-bold text-[#ebb2ff]/60 hover:text-[#ebb2ff] uppercase tracking-widest transition-colors">
+                                  Access Network
                                 </a>
                               </div>
                             </div>
@@ -178,15 +192,15 @@ export default function WebsiteManagementView() {
                           <td className="max-w-[360px] px-6 py-4 text-sm text-[#b9cacb] leading-relaxed line-clamp-2">{website.description}</td>
                           <td className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-[#849495]">
                             <span className="px-2 py-1 border border-[#3b494b] bg-[#10131a]">
-                              {website.category?.name || "General"}
+                              {getCategory(website)?.name || "General"}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => navigate(`/admin/websites/${website._id}/edit`)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ebb2ff] hover:border-[#ebb2ff] transition-all">
+                              <button onClick={() => navigate(`/admin/websites/${website.id}/edit`)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ebb2ff] hover:border-[#ebb2ff] transition-all">
                                 <Pencil size={15} />
                               </button>
-                              <button onClick={() => onDelete(website._id)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ffb4ab] hover:border-[#ffb4ab] transition-all">
+                              <button onClick={() => onDelete(website.id)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ffb4ab] hover:border-[#ffb4ab] transition-all">
                                 <Trash2 size={15} />
                               </button>
                             </div>
@@ -203,6 +217,25 @@ export default function WebsiteManagementView() {
                   </tbody>
                 </table>
               </div>
+              <div className="flex items-center justify-between px-6 py-3 border-t border-[#3b494b] text-xs font-bold text-[#849495]">
+                <span>Page {page} of {totalPages}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => loadData(page - 1)}
+                    disabled={loading || page <= 1}
+                    className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => loadData(page + 1)}
+                    disabled={loading || page >= totalPages}
+                    className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             </section>
           </main>
           <AdminFooter />
@@ -218,7 +251,7 @@ export default function WebsiteManagementView() {
               >
                 <Menu size={20} strokeWidth={2.5} />
               </button>
-              <h1 className="text-xs font-bold tracking-[0.15em] uppercase text-[#e1e2eb]">Sites_Ctrl</h1>
+              <h1 className="text-xs font-bold tracking-[0.15em] uppercase text-[#e1e2eb]">Sites Ctrl</h1>
            </div>
            <div className="flex items-center gap-3">
               <Search size={20} className="text-[#ebb2ff]" />
@@ -233,7 +266,7 @@ export default function WebsiteManagementView() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="SEARCH_SITES..."
+                placeholder="SEARCH SITES..."
                 className="bg-transparent text-sm font-bold outline-none placeholder:text-[#849495]/50 text-[#e1e2eb] uppercase tracking-widest w-full"
               />
             </div>
@@ -256,10 +289,10 @@ export default function WebsiteManagementView() {
              </button>
              {categories.map((cat) => (
                 <button
-                  key={cat._id}
-                  onClick={() => setActiveFilter(cat._id)}
+                  key={cat.id}
+                  onClick={() => setActiveFilter(cat.id)}
                   className={`shrink-0 px-5 py-2.5 text-[9px] font-bold uppercase tracking-[0.2em] transition-all border ${
-                    activeFilter === cat._id 
+                    activeFilter === cat.id 
                     ? "border-[#ebb2ff] bg-[#ebb2ff]/10 text-[#ebb2ff]" 
                     : "border-[#3b494b] bg-[#161b22] text-[#849495]"
                   }`}
@@ -273,7 +306,7 @@ export default function WebsiteManagementView() {
             {loading && <p className="text-center py-10 text-[10px] font-bold uppercase tracking-widest text-[#849495]">Accessing network...</p>}
             {!loading &&
               filteredWebsites.map((website) => (
-                <article key={website._id} className="border border-[#3b494b] bg-[#161b22]/70 p-5 backdrop-blur-md">
+                <article key={website.id} className="border border-[#3b494b] bg-[#161b22]/70 p-5 backdrop-blur-md">
                   <div className="flex items-start gap-3">
                     <div className="mt-1 flex items-center justify-center bg-[#ebb2ff]/10 text-[#ebb2ff] border border-[#ebb2ff]/30 h-10 w-10 shrink-0">
                       <Globe size={16} />
@@ -282,15 +315,15 @@ export default function WebsiteManagementView() {
                       <p className="font-bold text-[#e1e2eb] text-sm uppercase tracking-wide truncate">{website.title}</p>
                       <p className="mt-2 text-xs text-[#b9cacb] line-clamp-2 leading-relaxed">{website.description}</p>
                       <p className="mt-4 text-[9px] font-bold uppercase tracking-[0.15em] text-[#ebb2ff] border-t border-[#3b494b]/50 pt-3">
-                        {website.category?.name || "General"}
+                        {getCategory(website)?.name || "General"}
                       </p>
                     </div>
                   </div>
                   <div className="mt-5 flex items-center justify-end gap-4 border-t border-[#3b494b] pt-4">
-                    <button onClick={() => navigate(`/admin/websites/${website._id}/edit`)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ebb2ff]">
+                    <button onClick={() => navigate(`/admin/websites/${website.id}/edit`)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ebb2ff]">
                       <Pencil size={18} />
                     </button>
-                    <button onClick={() => onDelete(website._id)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ffb4ab]">
+                    <button onClick={() => onDelete(website.id)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ffb4ab]">
                       <Trash2 size={18} />
                     </button>
                   </div>

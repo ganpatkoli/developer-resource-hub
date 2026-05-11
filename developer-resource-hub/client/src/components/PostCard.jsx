@@ -47,7 +47,7 @@ export default function PostCard({ post, onOpenLink, canFavorite = false, isFavo
           {canFavorite && (
             <button
               type="button"
-              onClick={() => onToggleFavorite?.(post._id)}
+              onClick={() => onToggleFavorite?.(post.id)}
               className={`inline-flex w-full items-center justify-center rounded-lg border px-4 py-2 text-sm font-semibold transition sm:w-auto ${
                 isFavorite
                   ? "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200"

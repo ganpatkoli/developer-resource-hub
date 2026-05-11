@@ -173,7 +173,7 @@ export default function AdminAnalytics() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {popularItems.slice(0, 4).map((item, i) => (
-                          <div key={item._id} className="flex items-center gap-3 border border-[#3b494b]/50 bg-[#10131a]/50 p-3 hover:bg-[#272a31]/50 transition-all group">
+                          <div key={item.id} className="flex items-center gap-3 border border-[#3b494b]/50 bg-[#10131a]/50 p-3 hover:bg-[#272a31]/50 transition-all group">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[#ebb2ff]/10 text-[#ebb2ff] border border-[#ebb2ff]/20 group-hover:border-[#ebb2ff]">
                               {item.type === 'repo' ? <GitFork size={16} /> : <Globe size={16} />}
                             </div>
@@ -201,7 +201,7 @@ export default function AdminAnalytics() {
                       </div>
                       <div className="space-y-3">
                         {trendingRepos.map((repo, i) => (
-                          <div key={repo._id} className="flex items-center gap-3 border border-[#3b494b]/50 bg-[#10131a]/50 p-3 hover:border-[#00dbe9]/50 transition-colors">
+                          <div key={repo.id} className="flex items-center gap-3 border border-[#3b494b]/50 bg-[#10131a]/50 p-3 hover:border-[#00dbe9]/50 transition-colors">
                             <span className={`flex h-6 w-6 shrink-0 items-center justify-center text-[10px] font-bold border ${i === 0 ? "bg-[#ebb2ff]/20 text-[#ebb2ff] border-[#ebb2ff]/50" : i === 1 ? "bg-[#00dbe9]/20 text-[#00dbe9] border-[#00dbe9]/50" : "bg-[#849495]/20 text-[#849495] border-[#849495]/50"}`}>
                               {i + 1}
                             </span>
@@ -229,7 +229,7 @@ export default function AdminAnalytics() {
                       </div>
                       <div className="space-y-3">
                         {topWebsites.map((site) => (
-                          <div key={site._id} className="flex items-center gap-3 border border-[#3b494b]/50 bg-[#10131a]/50 p-3 hover:border-[#ebb2ff]/50 transition-colors">
+                          <div key={site.id} className="flex items-center gap-3 border border-[#3b494b]/50 bg-[#10131a]/50 p-3 hover:border-[#ebb2ff]/50 transition-colors">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-[#ebb2ff]/10 text-[#ebb2ff] border border-[#ebb2ff]/30">
                               <Globe size={14} />
                             </div>
@@ -250,7 +250,7 @@ export default function AdminAnalytics() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                       {breakdown.map((item) => (
-                        <div key={item._id} className="space-y-1.5">
+                        <div key={item.id} className="space-y-1.5">
                           <div className="flex justify-between items-end">
                             <p className="truncate text-[10px] font-bold uppercase tracking-widest text-[#849495]">{item.name || "Unknown"}</p>
                             <span className="text-[10px] font-mono text-[#e1e2eb]">{item.count}</span>
@@ -316,7 +316,7 @@ export default function AdminAnalytics() {
                 </h2>
                 <div className="space-y-3">
                   {trendingRepos.slice(0, 3).map((repo, i) => (
-                    <div key={repo._id} className="flex items-center justify-between border-b border-[#3b494b]/50 pb-2 last:border-0 last:pb-0">
+                    <div key={repo.id} className="flex items-center justify-between border-b border-[#3b494b]/50 pb-2 last:border-0 last:pb-0">
                       <div className="flex items-center gap-3">
                         <span className="text-[10px] font-mono text-[#849495]">#{i + 1}</span>
                         <p className="text-[11px] font-bold uppercase tracking-wide truncate max-w-[150px] text-[#e1e2eb]">{repo.title}</p>
@@ -333,7 +333,7 @@ export default function AdminAnalytics() {
                 </h2>
                 <div className="space-y-3">
                   {popularItems.slice(0, 3).map((item) => (
-                    <div key={item._id} className="flex items-center justify-between border-b border-[#3b494b]/50 pb-2 last:border-0 last:pb-0">
+                    <div key={item.id} className="flex items-center justify-between border-b border-[#3b494b]/50 pb-2 last:border-0 last:pb-0">
                       <p className="text-[11px] font-bold uppercase tracking-wide truncate max-w-[180px] text-[#e1e2eb]">{item.title}</p>
                       <p className="text-[10px] font-bold text-[#00dbe9]">{formatCount(item.views)} v</p>
                     </div>

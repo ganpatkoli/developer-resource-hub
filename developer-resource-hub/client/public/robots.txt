@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /oauth/success
+Disallow: /user/dashboard
+Disallow: /favorites
+
+Sitemap: https://aiguardian.cloud/sitemap.xml

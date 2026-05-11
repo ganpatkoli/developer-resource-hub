@@ -31,7 +31,7 @@ export const getStats = asyncHandler(async (req, res) => {
         githubMeta: { [Op.ne]: null }
       },
       include: [{ model: Category, attributes: ["name"] }],
-      order: [[literal("githubMeta->>'stars'"), "DESC"]],
+      order: [[literal('"githubMeta"->>\'stars\''), "DESC"]],
       limit: 5
     }),
     Post.findAll({

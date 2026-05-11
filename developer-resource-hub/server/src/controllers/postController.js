@@ -4,6 +4,48 @@ import { Category } from "../models/Category.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const isValidType = (t) => t === "repo" || t === "news" || t === "website";
+const isUUID = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+const getNormalizedRowValue = (row, aliases = []) => {
+  if (!row || typeof row !== "object") return "";
+  const aliasSet = new Set(aliases.map((alias) => String(alias).toLowerCase()));
+  const key = Object.keys(row).find((candidate) => aliasSet.has(String(candidate).toLowerCase()));
+  if (!key) return "";
+  return String(row[key] ?? "").trim();
+};
+
+const normalizeLookupText = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+
+const toCategoryLabel = (value) =>
+  normalizeLookupText(value)
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+const withCategoryAlias = (item) => {
+  const plain = item?.toJSON ? item.toJSON() : item;
+  if (plain?.Category && !plain.category) {
+    plain.category = plain.Category;
+  }
+  return plain;
+};
+
+const getCategoryTypeForPostType = (postType) => {
+  // Category model currently supports: repo, website, research
+  // News posts are grouped under repo categories for filter compatibility.
+  if (postType === "website") return "website";
+  return "repo";
+};
+
+const buildCategoryKey = (postType, categoryValue) =>
+  `${getCategoryTypeForPostType(postType)}::${normalizeLookupText(categoryValue)}`;
+
 
 export const getPosts = asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
@@ -29,7 +71,7 @@ export const getPosts = asyncHandler(async (req, res) => {
 
   const { count, rows } = await Post.findAndCountAll({
     where,
-    include: [{ model: Category, attributes: ["name"] }],
+    include: [{ model: Category, attributes: ["id", "name"] }],
     order: [[sortField, sortOrder]],
     offset,
     limit,
@@ -38,7 +80,7 @@ export const getPosts = asyncHandler(async (req, res) => {
 
   const totalPages = Math.ceil(count / limit) || 1;
   res.json({
-    data: rows,
+    data: rows.map(withCategoryAlias),
     page,
     limit,
     total: count,
@@ -47,13 +89,16 @@ export const getPosts = asyncHandler(async (req, res) => {
 });
 
 export const getPost = asyncHandler(async (req, res) => {
+  if (!isUUID(req.params.id)) {
+    return res.status(404).json({ message: "Invalid post ID format" });
+  }
   const post = await Post.findByPk(req.params.id, {
-    include: [{ model: Category, attributes: ["name"] }]
+    include: [{ model: Category, attributes: ["id", "name"] }]
   });
   if (!post) {
     return res.status(404).json({ message: "Post not found" });
   }
-  res.json(post);
+  res.json(withCategoryAlias(post));
 });
 
 export const createPost = asyncHandler(async (req, res) => {
@@ -76,12 +121,15 @@ export const createPost = asyncHandler(async (req, res) => {
     categoryId: category,
   });
   const populated = await Post.findByPk(post.id, {
-    include: [{ model: Category, attributes: ["name"] }]
+    include: [{ model: Category, attributes: ["id", "name"] }]
   });
-  res.status(201).json(populated);
+  res.status(201).json(withCategoryAlias(populated));
 });
 
 export const updatePost = asyncHandler(async (req, res) => {
+  if (!isUUID(req.params.id)) {
+    return res.status(404).json({ message: "Invalid post ID format" });
+  }
   const { title, description, link, type, category } = req.body;
   const post = await Post.findByPk(req.params.id);
   if (!post) {
@@ -108,12 +156,15 @@ export const updatePost = asyncHandler(async (req, res) => {
   
   await post.update(updateData);
   const populated = await Post.findByPk(post.id, {
-    include: [{ model: Category, attributes: ["name"] }]
+    include: [{ model: Category, attributes: ["id", "name"] }]
   });
-  res.json(populated);
+  res.json(withCategoryAlias(populated));
 });
 
 export const deletePost = asyncHandler(async (req, res) => {
+  if (!isUUID(req.params.id)) {
+    return res.status(404).json({ message: "Invalid post ID format" });
+  }
   const post = await Post.findByPk(req.params.id);
   if (!post) {
     return res.status(404).json({ message: "Post not found" });
@@ -131,12 +182,23 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Maximum 500 items allowed per import" });
   }
 
-  const categoryIds = [...new Set(items.map((item) => String(item?.category || "")).filter(Boolean))];
-  const categories = await Category.findAll({ 
-    where: { id: { [Op.in]: categoryIds } },
-    attributes: ["id"] 
+  // Fetch all categories to allow matching by Name or ID
+  const allCategories = await Category.findAll({ attributes: ["id", "name", "type"] });
+  const categoryMap = {}; // `${categoryType}::normalizedName` -> id
+  const categoryIdSet = new Set(); // existing IDs
+
+  allCategories.forEach(c => {
+    if (c?.id) categoryIdSet.add(c.id);
+    if (c?.name) {
+      const catType = c.type || "repo";
+      const lowerName = String(c.name).toLowerCase();
+      const normalizedName = normalizeLookupText(c.name);
+      categoryMap[`${catType}::${lowerName}`] = c.id;
+      categoryMap[`${catType}::${normalizedName}`] = c.id;
+    }
   });
-  const validCategorySet = new Set(categories.map((c) => String(c.id)));
+
+  const isUUID = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
   let created = 0;
   let updated = 0;
@@ -144,39 +206,67 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
   const errors = [];
 
   for (let index = 0; index < items.length; index += 1) {
-    const row = items[index] || {};
-    const title = String(row.title || "").trim();
-    const description = String(row.description || "").trim();
-    const link = String(row.link || "").trim();
-    const type = String(row.type || "").trim();
-    const category = String(row.category || "").trim();
+    try {
+      const row = items[index] || {};
+      const title = getNormalizedRowValue(row, ["title", "name"]);
+      const description = getNormalizedRowValue(row, ["description", "desc", "details", "summary"]);
+      const link = getNormalizedRowValue(row, ["link", "url", "website", "websiteUrl", "websiteURL"]);
+      const type = getNormalizedRowValue(row, ["type"]);
+      const category = getNormalizedRowValue(row, ["category", "categoryId", "categoryName", "category_slug", "categorySlug", "slug"]);
 
-    if (!title || !description || !link || !type || !category) {
-      errors.push({ index, message: "title, description, link, type, category are required" });
-      skipped += 1;
-      continue;
-    }
-    if (!isValidType(type)) {
-      errors.push({ index, message: 'type must be "repo", "news", or "website"' });
-      skipped += 1;
-      continue;
-    }
-    if (!validCategorySet.has(category)) {
-      errors.push({ index, message: "Invalid category id" });
-      skipped += 1;
-      continue;
-    }
+      if (!title || !description || !link || !type || !category) {
+        errors.push({ index, message: "title, description, link, type, category are required" });
+        skipped += 1;
+        continue;
+      }
+      if (!isValidType(type)) {
+        errors.push({ index, message: 'type must be "repo", "news", or "website"' });
+        skipped += 1;
+        continue;
+      }
+      let resolvedCategoryId = null;
+      const normalizedCategory = normalizeLookupText(category);
+      const categoryType = getCategoryTypeForPostType(type);
+      const categoryKey = buildCategoryKey(type, category);
+      const categoryKeyLower = `${categoryType}::${category.toLowerCase()}`;
+      if (isUUID(category) && categoryIdSet.has(category)) {
+        resolvedCategoryId = category;
+      } else if (categoryMap[categoryKeyLower]) {
+        resolvedCategoryId = categoryMap[categoryKeyLower];
+      } else if (categoryMap[categoryKey]) {
+        resolvedCategoryId = categoryMap[categoryKey];
+      } else if (type === "website" || type === "repo" || type === "news") {
+        const categoryName = toCategoryLabel(category);
+        const [createdCategory] = await Category.findOrCreate({
+          where: { name: categoryName, type: categoryType },
+          defaults: { name: categoryName, type: categoryType, active: true },
+        });
+        resolvedCategoryId = createdCategory.id;
+        categoryIdSet.add(createdCategory.id);
+        categoryMap[`${categoryType}::${categoryName.toLowerCase()}`] = createdCategory.id;
+        categoryMap[`${categoryType}::${normalizedCategory}`] = createdCategory.id;
+      }
 
-    const [post, isNew] = await Post.findOrCreate({
-      where: { link, type },
-      defaults: { title, description, link, type, categoryId: category }
-    });
+      if (!resolvedCategoryId) {
+        errors.push({ index, message: `Category "${category}" not found by ID or Name` });
+        skipped += 1;
+        continue;
+      }
 
-    if (isNew) {
-      created += 1;
-    } else {
-      await post.update({ title, description, categoryId: category });
-      updated += 1;
+      const [post, isNew] = await Post.findOrCreate({
+        where: { link, type },
+        defaults: { title, description, link, type, categoryId: resolvedCategoryId }
+      });
+
+      if (isNew) {
+        created += 1;
+      } else {
+        await post.update({ title, description, categoryId: resolvedCategoryId });
+        updated += 1;
+      }
+    } catch (err) {
+      errors.push({ index, message: err?.message || "Unexpected import error" });
+      skipped += 1;
     }
   }
 
@@ -191,6 +281,9 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
 });
 
 export const incrementViews = asyncHandler(async (req, res) => {
+  if (!isUUID(req.params.id)) {
+    return res.status(404).json({ message: "Invalid post ID format" });
+  }
   const post = await Post.findByPk(req.params.id);
   if (!post) {
     return res.status(404).json({ message: "Post not found" });

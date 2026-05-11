@@ -1,0 +1,236 @@
+.toolkit-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 32px;
+  padding: 40px 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.toolkit-sidebar {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+  background: #111622;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #1a2333;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.toc-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #22d3ee;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.toc-item {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #64748b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  gap: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.toc-item:hover {
+  background: rgba(34, 211, 238, 0.05);
+  color: #fff;
+}
+
+.toc-item.active {
+  background: rgba(34, 211, 238, 0.1);
+  color: #22d3ee;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.1);
+}
+
+.toc-number {
+  opacity: 0.5;
+  color: #22d3ee;
+}
+
+.toolkit-main {
+  background: #111622;
+  border-radius: 20px;
+  padding: 48px;
+  border: 1px solid #1a2333;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #475569;
+  margin-bottom: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb-link {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb-link:hover {
+  color: #22d3ee;
+}
+
+.breadcrumb-current {
+  color: #22d3ee;
+  font-weight: 800;
+}
+
+.toolkit-title {
+  font-size: 40px;
+  font-weight: 900;
+  color: #f1f5f9;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+.toolkit-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #1a2333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.toolkit-content {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #94a3b8;
+}
+
+.toolkit-paragraph {
+  margin-bottom: 20px;
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.toolkit-heading {
+  font-size: 24px;
+  font-weight: 800;
+  color: #22d3ee;
+  margin: 40px 0 20px;
+  scroll-margin-top: 100px;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-left: 4px solid #22d3ee;
+  padding-left: 16px;
+}
+
+.toolkit-list {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toolkit-list-item {
+  display: flex;
+  gap: 12px;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.bullet-symbol {
+  color: #22d3ee;
+  font-weight: 900;
+  flex-shrink: 0;
+  min-width: 20px;
+  text-align: center;
+}
+
+.list-text {
+  flex: 1;
+}
+
+/* Background Grid Pattern */
+.toolkit-bg-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(to right, rgba(132, 148, 149, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(132, 148, 149, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  z-index: 1;
+}
+
+@media (max-width: 1024px) {
+  .toolkit-sidebar {
+    display: none;
+  }
+  
+  .toolkit-container {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+  
+  .toolkit-main {
+    padding: 32px 20px;
+  }
+  
+  .toolkit-title {
+    font-size: 28px;
+  }
+}

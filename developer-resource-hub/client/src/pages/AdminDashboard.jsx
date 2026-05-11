@@ -15,7 +15,8 @@ import {
   Settings as SettingsIcon,
   CheckCircle2,
   XCircle,
-  Globe
+  Globe,
+  Layers
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -116,6 +117,23 @@ export default function AdminDashboard() {
               )}
 
               <div className="grid gap-8">
+                <section className="border border-[#3b494b] bg-[#161b22]/70 backdrop-blur-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]">
+                        <Layers size={20} />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-[#e1e2eb]">Toolkit Collections</h2>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#849495]">Upload and manage homepage toolkits</p>
+                      </div>
+                    </div>
+                    <Link to="/admin/toolkits" className="border border-[#00dbe9] bg-[#00dbe9]/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#00dbe9] hover:bg-[#00dbe9]/20 transition-all">
+                      Open Manager
+                    </Link>
+                  </div>
+                </section>
+
                 <section className="border border-[#3b494b] bg-[#161b22]/70 backdrop-blur-xl p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="flex h-10 w-10 items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]">
@@ -191,7 +209,7 @@ export default function AdminDashboard() {
                       <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#849495] mb-1.5 block">Category</label>
                       <select name="sectionCategory" className="w-full bg-[#10131a] border border-[#3b494b] px-4 py-2.5 text-sm font-mono text-[#e1e2eb] focus:outline-none focus:border-[#ebb2ff] transition-colors" required>
                         <option value="">Select...</option>
-                        {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </div>
                     <button type="submit" className="w-full bg-[#ebb2ff]/10 border border-[#ebb2ff] text-[#ebb2ff] hover:bg-[#ebb2ff]/20 font-bold uppercase tracking-[0.15em] py-2.5 text-[11px] transition-all">

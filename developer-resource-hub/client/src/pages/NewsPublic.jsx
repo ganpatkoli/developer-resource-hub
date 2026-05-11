@@ -9,11 +9,11 @@ import AdBanner from "../components/AdBanner";
 const PAGE_SIZE = 12;
 
 const RSS_FEEDS = [
-  { url: "https://news.google.com/rss/search?q=technology&hl=en-IN&gl=IN&ceid=IN:en", category: "GOOGLE_TECH" },
-  { url: "https://github.blog/feed/", category: "GITHUB_GLOBAL" },
-  { url: "https://openai.com/news/rss.xml", category: "AI_ADVERSARIAL" },
-  { url: "https://www.coindesk.com/arc/outboundfeeds/rss/", category: "CRYPTO_DATA" },
-  { url: "https://techcrunch.com/feed/", category: "TECH_ROOT" }
+  { url: "https://news.google.com/rss/search?q=technology&hl=en-IN&gl=IN&ceid=IN:en", category: "GOOGLE TECH" },
+  { url: "https://github.blog/feed/", category: "GITHUB GLOBAL" },
+  { url: "https://openai.com/news/rss.xml", category: "AI ADVERSARIAL" },
+  { url: "https://www.coindesk.com/arc/outboundfeeds/rss/", category: "CRYPTO DATA" },
+  { url: "https://techcrunch.com/feed/", category: "TECH ROOT" }
 ];
 
 function NewsCard({ item, idx }) {
@@ -38,10 +38,10 @@ function NewsCard({ item, idx }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="bg-cyan-500/10 text-cyan-400 text-[8px] font-black px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-[0.1em]">
-              {item.category || "TECH_INTEL"}
+              {item.category || "TECH INTEL"}
             </span>
             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">
-               {item.source?.toUpperCase().replace('TECHNOLOGY - GOOGLE NEWS', 'GOOGLE_HUB') || "REUTERS_INTEL"}
+               {item.source?.toUpperCase().replace('TECHNOLOGY - GOOGLE NEWS', 'GOOGLE HUB') || "REUTERS INTEL"}
             </span>
           </div>
           <h3 className={`text-[14px] font-black leading-tight group-hover:text-cyan-400 transition-colors line-clamp-2 uppercase tracking-tight ${dark ? "text-slate-100" : "text-slate-900"}`}>
@@ -64,7 +64,7 @@ function NewsCard({ item, idx }) {
           rel="noopener noreferrer"
           className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-[10px] font-black tracking-[0.1em] text-[#0B0F19] hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
         >
-          SYNC_INTEL <ArrowUpRight size={14} />
+          SYNC INTEL <ArrowUpRight size={14} />
         </a>
       </div>
     </article>
@@ -80,11 +80,11 @@ export default function NewsPublic() {
 
   const chips = [
     "ALL",
-    "GOOGLE_TECH",
-    "GITHUB_GLOBAL",
-    "AI_ADVERSARIAL",
-    "CRYPTO_DATA",
-    "TECH_ROOT"
+    "GOOGLE TECH",
+    "GITHUB GLOBAL",
+    "AI ADVERSARIAL",
+    "CRYPTO DATA",
+    "TECH ROOT"
   ];
 
   const fetchNews = useCallback(async () => {
@@ -157,7 +157,7 @@ export default function NewsPublic() {
             Intelligence Data Stream
           </h3>
           <h2 className={`text-6xl font-black tracking-tight uppercase ${dark ? "text-slate-100" : "text-slate-900"}`}>
-            GLOBAL_TECH_INTEL
+            GLOBAL TECH INTEL
           </h2>
           <p className="mt-4 text-slate-500 text-sm font-medium tracking-widest uppercase">Real-time analysis of the evolving technological landscape</p>
         </div>

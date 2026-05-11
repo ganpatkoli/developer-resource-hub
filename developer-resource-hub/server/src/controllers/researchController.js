@@ -1,5 +1,6 @@
 import { ResearchSubmission } from "../models/ResearchSubmission.js";
 import { Category } from "../models/Category.js";
+import { Op } from "sequelize";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 function normalizeKeywords(raw) {
@@ -22,12 +23,38 @@ function parseDate(value) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-export const getResearchSubmissions = asyncHandler(async (_req, res) => {
-  const items = await ResearchSubmission.findAll({
-    include: [{ model: Category, attributes: ["name"] }],
-    order: [["createdAt", "DESC"]]
+export const getResearchSubmissions = asyncHandler(async (req, res) => {
+  const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit), 10) || 20));
+  const offset = (page - 1) * limit;
+  const categoryId = req.query.category ? String(req.query.category).trim() : "";
+  const search = req.query.search ? String(req.query.search).trim() : "";
+
+  const where = {};
+  if (categoryId) where.categoryId = categoryId;
+  if (search) {
+    where[Op.or] = [
+      { title: { [Op.iLike]: `%${search}%` } },
+      { description: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  const { count, rows } = await ResearchSubmission.findAndCountAll({
+    where,
+    include: [{ model: Category, attributes: ["id", "name"] }],
+    order: [["createdAt", "DESC"]],
+    offset,
+    limit,
+    distinct: true
   });
-  res.json(items);
+  const totalPages = Math.ceil(count / limit) || 1;
+  res.json({
+    data: rows,
+    page,
+    limit,
+    total: count,
+    totalPages
+  });
 });
 
 export const getPublicResearchSubmissions = asyncHandler(async (req, res) => {
@@ -36,7 +63,7 @@ export const getPublicResearchSubmissions = asyncHandler(async (req, res) => {
   const offset = (page - 1) * limit;
 
   const { count, rows } = await ResearchSubmission.findAndCountAll({
-    include: [{ model: Category, attributes: ["name"] }],
+    include: [{ model: Category, attributes: ["id", "name"] }],
     order: [["dateOfSubmission", "DESC"], ["createdAt", "DESC"]],
     offset,
     limit,
@@ -73,7 +100,7 @@ export const createResearchSubmission = asyncHandler(async (req, res) => {
 
 export const getResearchSubmission = asyncHandler(async (req, res) => {
   const item = await ResearchSubmission.findByPk(req.params.id, {
-    include: [{ model: Category, attributes: ["name"] }]
+    include: [{ model: Category, attributes: ["id", "name"] }]
   });
   if (!item) {
     return res.status(404).json({ message: "Research submission not found" });
@@ -128,45 +155,97 @@ export const importResearchBulk = asyncHandler(async (req, res) => {
   let skipped = 0;
   const errors = [];
 
+  // Pre-fetch categories for faster lookup
+  const allCats = await Category.findAll({ where: { type: "research" } });
+  const catMap = {};
+  allCats.forEach(c => {
+    if (c.id) catMap[String(c.id).toLowerCase()] = c.id;
+    if (c.name) catMap[String(c.name).toLowerCase()] = c.id;
+  });
+
   for (let index = 0; index < items.length; index += 1) {
-    const row = items[index] || {};
-    const title = String(
-      pickField(row, ["title", "paperTitle", "paper_title", "paper title"]) || ""
-    ).trim();
-    const description = String(
-      pickField(row, ["description", "abstract", "summary"]) || ""
-    ).trim();
-    const publishUrl = String(
-      pickField(row, ["publishUrl", "publishURL", "publish_url", "publish url", "publishedUrl", "url"]) || ""
-    ).trim();
-    const documentUrl = String(
-      pickField(row, ["documentUrl", "documentURL", "document_url", "document url", "docUrl", "pdfUrl", "pdf_url"]) || ""
-    ).trim();
-    const parsedDate = parseDate(
-      pickField(row, ["dateOfSubmission", "submissionDate", "submission_date", "date", "dateOfSubmit", "date of submission"])
-    );
-    const keywords = normalizeKeywords(
-      pickField(row, ["keywords", "keyword", "tags", "tag"])
-    );
+    try {
+      const row = items[index] || {};
+      const title = String(
+        pickField(row, ["title", "paperTitle", "paper_title", "paper title"]) || ""
+      ).trim();
+      const description = String(
+        pickField(row, ["description", "abstract", "summary"]) || ""
+      ).trim();
+      const publishUrl = String(
+        pickField(row, ["publishUrl", "publishURL", "publish_url", "publish url", "publishedUrl", "url"]) || ""
+      ).trim();
+      const documentUrl = String(
+        pickField(row, ["documentUrl", "documentURL", "document_url", "document url", "docUrl", "pdfUrl", "pdf_url"]) || ""
+      ).trim();
+      const parsedDate = parseDate(
+        pickField(row, ["dateOfSubmission", "submissionDate", "submission_date", "date", "dateOfSubmit", "date of submission"])
+      );
+      const keywords = normalizeKeywords(
+        pickField(row, ["keywords", "keyword", "tags", "tag"])
+      );
 
-    if (!title || !description || !publishUrl || !documentUrl || !parsedDate) {
-      errors.push({ index, message: "title, description, dateOfSubmission, publishUrl, documentUrl are required" });
+      if (!title || !description || !publishUrl || !documentUrl || !parsedDate) {
+        errors.push({ index, message: "Missing required fields (title, abstract, URLs, or date)" });
+        skipped += 1;
+        continue;
+      }
+
+      let categoryId = pickField(row, ["category", "categoryId", "category_id", "category_name"]);
+      if (categoryId) {
+        const lookup = String(categoryId).trim();
+        const lookupLower = lookup.toLowerCase();
+        
+        if (catMap[lookupLower]) {
+          categoryId = catMap[lookupLower];
+        } else if (lookup && lookup.length > 1) {
+          // Auto-create category if it doesn't exist
+          try {
+            const newCat = await Category.create({
+              name: lookup,
+              type: "research",
+              active: true
+            });
+            categoryId = newCat.id;
+            catMap[lookupLower] = categoryId;
+            catMap[String(categoryId).toLowerCase()] = categoryId;
+          } catch (catErr) {
+            console.error("Failed to auto-create category:", catErr);
+            categoryId = allCats.length > 0 ? allCats[0].id : null;
+          }
+        } else {
+          categoryId = allCats.length > 0 ? allCats[0].id : null;
+        }
+      }
+
+      // If no category found/created, default to first available research category
+      if (!categoryId && allCats.length > 0) {
+        categoryId = allCats[0].id;
+      }
+
+      const [item, isNew] = await ResearchSubmission.findOrCreate({
+        where: { publishUrl },
+        defaults: { 
+          title, 
+          description, 
+          dateOfSubmission: parsedDate, 
+          publishUrl, 
+          documentUrl, 
+          keywords, 
+          categoryId 
+        }
+      });
+
+      if (isNew) {
+        created += 1;
+      } else {
+        await item.update({ title, description, dateOfSubmission: parsedDate, documentUrl, keywords, categoryId });
+        updated += 1;
+      }
+    } catch (err) {
+      console.error(`Bulk Import Error at index ${index}:`, err);
+      errors.push({ index, message: err.message || "Database operation failed" });
       skipped += 1;
-      continue;
-    }
-
-    const category = pickField(row, ["category", "categoryId", "category_id"]);
-
-    const [item, isNew] = await ResearchSubmission.findOrCreate({
-      where: { publishUrl },
-      defaults: { title, description, dateOfSubmission: parsedDate, publishUrl, documentUrl, keywords, categoryId: category }
-    });
-
-    if (isNew) {
-      created += 1;
-    } else {
-      await item.update({ title, description, dateOfSubmission: parsedDate, documentUrl, keywords, categoryId: category });
-      updated += 1;
     }
   }
 

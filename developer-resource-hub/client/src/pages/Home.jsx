@@ -52,6 +52,11 @@ const RSS_FEEDS = [
   { url: "https://openai.com/news/rss.xml", category: "AI" }
 ];
 
+const trackPostView = (id) => {
+  if (!id) return;
+  client.patch(`/posts/${id}/view`).catch(() => {});
+};
+
 function HeroSlider() {
   const [current, setCurrent] = useState(0);
   const slides = [
@@ -144,7 +149,7 @@ function SectionHeader({ title, count, link, live }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
             </span>
-            <span className="text-cyan-400 text-[8px] font-black tracking-widest uppercase">LIVE_FEED</span>
+            <span className="text-cyan-400 text-[8px] font-black tracking-widest uppercase">LIVE FEED</span>
           </div>
         )}
         {count && <span className="hidden sm:block bg-[#161b22] text-slate-500 text-[10px] px-2 py-0.5 rounded border border-[#3b494b] font-black">{count} ACTIVE</span>}
@@ -156,18 +161,25 @@ function SectionHeader({ title, count, link, live }) {
   );
 }
 
-function RepoCard({ item }) {
+import React from "react";
+
+const RepoCard = React.memo(({ item }) => {
   const { dark } = useTheme();
   const parsed = parseGithubRepo(item.link);
-  const owner = parsed?.owner || "cyber-intel";
-  const repoName = parsed?.repo || item.title;
+  const owner = parsed?.owner || "unknown";
+  const repoName = parsed?.repo || item.title || "repository";
+
+  const normalizeExternalUrl = (link) => {
+    if (!link) return "#";
+    if (/^https?:\/\//i.test(link)) return link;
+    return `https://${link}`;
+  };
 
   return (
     <div className={`flex flex-col p-6 rounded-2xl border transition-all duration-300 group h-full ${dark ? "bg-[#111622]/80 backdrop-blur-xl border-[#1A2333] hover:border-cyan-500/30" : "bg-white border-slate-200 shadow-lg"}`}>
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-full border border-[#1A2333] overflow-hidden flex items-center justify-center bg-black shadow-[0_0_15px_rgba(249,115,22,0.1)]">
-            {/* Mimicking the orange pixel logo from the screenshot */}
             <div className="grid grid-cols-2 gap-0.5">
               <div className="w-2 h-2 bg-orange-500" />
               <div className="w-2 h-2 bg-orange-600" />
@@ -179,7 +191,7 @@ function RepoCard({ item }) {
             <h3 className={`font-black text-[15px] tracking-tight truncate max-w-[180px] ${dark ? "text-white" : "text-slate-900"}`}>
               <span className="text-cyan-400">{owner}</span> <span className="text-slate-500">/</span> {repoName}
             </h3>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">v2.4.1 // PRODUCTION_READY</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">v2.4.1 // PRODUCTION READY</span>
           </div>
         </div>
         <button className="text-slate-500 hover:text-cyan-400 transition-colors">
@@ -189,55 +201,126 @@ function RepoCard({ item }) {
 
       <div className="flex-1 mb-8">
         <p className={`text-[13px] leading-relaxed line-clamp-3 ${dark ? "text-slate-400" : "text-slate-600"}`}>
-          {item.description || "Low-level diagnostic toolkit for real-time memory inspection and automated kernel-mode threat detection in distributed systems."}
+          {item.description || "No description available."}
         </p>
       </div>
 
       <div className="flex items-center gap-5 mb-8 text-[11px] font-black tracking-widest text-slate-500 uppercase">
-        <div className="flex items-center gap-1.5"><Star size={16} className="text-cyan-400/60" /> {item.stars || "12.4k"}</div>
-        <div className="flex items-center gap-1.5"><GitFork size={16} className="text-cyan-400/60" /> {item.forks || "842"}</div>
-        <div className="flex items-center gap-1.5"><Eye size={16} className="text-cyan-400/60" /> {item.views || "0"}</div>
+        <div className="flex items-center gap-1.5"><Star size={16} className="text-cyan-400/60" /> {item.stars || 0}</div>
+        <div className="flex items-center gap-1.5"><GitFork size={16} className="text-cyan-400/60" /> {item.forks || 0}</div>
+        <div className="flex items-center gap-1.5"><Eye size={16} className="text-cyan-400/60" /> {item.views || 0}</div>
         <div className="flex items-center gap-2.5 ml-auto px-4 py-1.5 rounded-full border border-[#1A2333] bg-[#0B0F19] text-white">
           <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-          <span>{item.language || "C++"}</span>
+          <span>{item.language || "N/A"}</span>
         </div>
       </div>
 
       <a
-        href={item.link}
+        href={normalizeExternalUrl(item.link)}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => trackPostView(item.id)}
         className={`w-full py-4 rounded-xl border border-cyan-500/20 font-black text-[11px] tracking-[0.25em] uppercase text-center transition-all ${dark ? "bg-black/40 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:border-cyan-500" : "bg-cyan-50 border-cyan-100 text-cyan-600 hover:bg-cyan-600 hover:text-white"}`}
       >
         View Repository
       </a>
     </div>
   );
-}
+});
 
-function KnowledgeCard({ item }) {
+const WebsiteCard = React.memo(({ item }) => {
   const { dark } = useTheme();
+  let domain = "website";
+  try {
+    domain = new URL(item.link || "").hostname.replace("www.", "");
+  } catch {
+    domain = "website";
+  }
+
+  const normalizeExternalUrl = (link) => {
+    if (!link) return "#";
+    if (/^https?:\/\//i.test(link)) return link;
+    return `https://${link}`;
+  };
+
+  return (
+    <div className={`flex flex-col p-4 rounded-xl border transition-all duration-300 group h-full ${dark ? "bg-[#121a24]/80 backdrop-blur-xl border-[#2a3a4f] hover:border-cyan-400/40" : "bg-white border-slate-200 shadow-lg"}`}>
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg border border-cyan-900/40 overflow-hidden flex items-center justify-center bg-cyan-950/30 text-cyan-400">
+            <Globe size={18} />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <h3 className={`font-black text-[13px] tracking-tight truncate max-w-[180px] ${dark ? "text-white" : "text-slate-900"}`}>
+              {item.title || "Website"}
+            </h3>
+            <span className="text-[9px] font-bold text-cyan-500/80 uppercase tracking-widest truncate">{domain}</span>
+          </div>
+        </div>
+        <button className="text-slate-500 hover:text-cyan-400 transition-colors">
+          <ExternalLink size={16} />
+        </button>
+      </div>
+
+      <div className="flex-1 mb-5">
+        <p className={`text-[12px] leading-relaxed line-clamp-2 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+          {item.description || "No description available."}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3 mb-5 text-[10px] font-black tracking-widest text-slate-500 uppercase">
+        <div className="flex items-center gap-1.5"><Layout size={14} className="text-cyan-400/70" /> Platform</div>
+        <div className="flex items-center gap-1.5"><Eye size={14} className="text-cyan-400/70" /> {item.views || "0"}</div>
+        <div className="flex items-center gap-2 ml-auto px-2.5 py-1 rounded-full border border-cyan-900/40 bg-cyan-950/20 text-cyan-300">
+          <div className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+          <span>WEBSITE</span>
+        </div>
+      </div>
+
+      <a
+        href={normalizeExternalUrl(item.link)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => trackPostView(item.id)}
+        className={`w-full py-2.5 rounded-lg border font-black text-[10px] tracking-[0.2em] uppercase text-center transition-all ${dark ? "border-cyan-800/40 bg-cyan-950/20 text-cyan-300 hover:bg-cyan-400 hover:text-[#0B0F19] hover:border-cyan-400" : "bg-cyan-50 border-cyan-100 text-cyan-600 hover:bg-cyan-600 hover:text-white"}`}
+      >
+        Visit Website
+      </a>
+    </div>
+  );
+});
+
+const KnowledgeCard = React.memo(({ item }) => {
+  const { dark } = useTheme();
+  const date = item.dateOfSubmission ? new Date(item.dateOfSubmission).toLocaleDateString() : "RECENT";
+  const categoryName = item.Category?.name || item.category || "RESEARCH";
+  
   return (
     <div className={`p-4 rounded-2xl border transition-all group flex items-center gap-5 ${dark ? "bg-[#161b22] border-[#3b494b] hover:border-cyan-500/50" : "bg-white border-slate-200 shadow-lg shadow-slate-100 hover:border-cyan-400"}`}>
       <div className={`h-14 w-14 shrink-0 rounded-xl flex items-center justify-center border transition-colors ${dark ? "bg-[#0B0F19] border-[#3b494b] text-cyan-400" : "bg-slate-50 border-slate-200 text-cyan-600"}`}>
         <BookOpen size={24} />
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className={`font-black text-[14px] leading-tight mb-1 group-hover:text-cyan-400 transition-colors ${dark ? "text-white" : "text-slate-900"}`}>
+        <h3 className={`font-black text-[14px] leading-tight mb-1 group-hover:text-cyan-400 transition-colors uppercase ${dark ? "text-white" : "text-slate-900"}`}>
           {item.title}
         </h3>
         <div className="flex items-center gap-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-          <span>Arxiv: 2311.0942</span>
+          <span className="text-cyan-500">{categoryName}</span>
           <span className="h-1 w-1 rounded-full bg-slate-700" />
-          <span>4.2 MB</span>
+          <span>{date}</span>
         </div>
       </div>
-      <button className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center transition-all ${dark ? "bg-slate-800 text-slate-400 hover:bg-cyan-500 hover:text-[#0B0F19]" : "bg-slate-100 text-slate-600 hover:bg-cyan-600 hover:text-white"}`}>
-        <Download size={18} />
-      </button>
+      <a 
+        href={item.documentUrl} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center transition-all ${dark ? "bg-slate-800 text-slate-400 hover:bg-cyan-500 hover:text-[#0B0F19]" : "bg-slate-100 text-slate-600 hover:bg-cyan-600 hover:text-white"}`}
+      >
+        <Eye size={18} />
+      </a>
     </div>
   );
-}
+});
 
 function ResourceHubCard({ title, desc, icon: Icon, color }) {
   const { dark } = useTheme();
@@ -252,6 +335,53 @@ function ResourceHubCard({ title, desc, icon: Icon, color }) {
     </div>
   );
 }
+
+const ToolkitCard = React.memo(({ item }) => {
+  const { dark } = useTheme();
+  return (
+    <Link
+      to={`/toolkits/${item.slug}`}
+      className={`flex flex-col p-5 rounded-2xl border transition-all duration-300 group h-full relative overflow-hidden ${dark ? "bg-transparent border-[#1A2333] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(34,211,238,0.05)]" : "bg-white border-slate-200 shadow-lg"}`}
+    >
+      {/* Background Accent Blur */}
+      <div className={`absolute -right-8 -top-8 h-20 w-20 rounded-full bg-cyan-500 opacity-5 blur-2xl transition-opacity group-hover:opacity-10`} />
+
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg border border-cyan-500/20 overflow-hidden flex items-center justify-center bg-cyan-500/5 text-cyan-400 group-hover:bg-cyan-500/10 transition-colors">
+            <Zap size={18} fill="currentColor" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <h3 className={`font-black text-[14px] tracking-tight truncate max-w-[150px] uppercase ${dark ? "text-white group-hover:text-cyan-400" : "text-slate-900 group-hover:text-cyan-600"}`}>
+              {item.title}
+            </h3>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{item.audience || "DEVELOPER"}</span>
+          </div>
+        </div>
+        <div className="text-slate-500 group-hover:text-cyan-400 transition-colors">
+          <ArrowUpRight size={18} />
+        </div>
+      </div>
+
+      <div className="flex-1 mb-5">
+        <p className={`text-[12px] leading-relaxed line-clamp-2 font-medium ${dark ? "text-slate-400" : "text-slate-600"}`}>
+          {item.description || "Access curated technical resources and developer intelligence packages."}
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between text-[10px] font-black tracking-widest text-slate-500 uppercase border-t border-[#3b494b]/20 pt-4">
+        <div className="flex items-center gap-1.5">
+          <Eye size={14} className="text-cyan-400/60" /> {item.views || 0}
+        </div>
+        <div className="flex -space-x-1.5">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-4 w-4 rounded-full border border-[#111622] bg-slate-800" />
+          ))}
+        </div>
+      </div>
+    </Link>
+  );
+});
 
 function NewsCard({ item }) {
   const { dark } = useTheme();
@@ -292,9 +422,14 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [news, setNews] = useState([]);
   const [repos, setRepos] = useState([]);
+  const [reposTotal, setReposTotal] = useState(0);
+  const [websites, setWebsites] = useState([]);
+  const [toolkits, setToolkits] = useState([]);
   const [research, setResearch] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeNewsCategory, setActiveNewsCategory] = useState("ALL");
+
+
 
   // Fetch RSS news
   const fetchNews = async () => {
@@ -323,8 +458,18 @@ export default function Home() {
         setLoading(true);
         await Promise.allSettled([
           fetchNews(),
-          client.get("/posts?limit=12&type=repository").then(res => setRepos(res.data.data)),
-          client.get("/research/public?limit=12").then(res => setResearch(res.data.data))
+          client.get("/posts?limit=12&type=repo").then((res) => {
+            setRepos(res.data.data || []);
+            setReposTotal(res.data.total || 0);
+          }),
+          client.get("/posts?limit=12&type=website").then(res => setWebsites(res.data.data)),
+          client.get("/toolkits/public?limit=8").then((res) => setToolkits(res.data.data || [])),
+          client.get("/research/public", { params: { limit: 12, t: Date.now() } })
+            .then(res => {
+              console.log("Research API Response:", res.data);
+              setResearch(res.data?.data || []);
+            })
+            .catch(err => console.error("Research API Error:", err)),
         ]);
       } catch (err) {
         console.error("Initialization Error:", err);
@@ -339,32 +484,44 @@ export default function Home() {
   useEffect(() => {
     if (loading) return;
 
-    const carouselIds = ["news-carousel", "repos-carousel", "knowledge-carousel", "resource-carousel"];
-    const scrollSpeed = 0.8; // Slightly faster for visibility
+    const carouselIds = ["news-carousel", "repos-carousel", "websites-carousel", "knowledge-carousel", "resource-carousel", "toolkits-carousel"];
+    const scrollSpeed = 0.6; // Reduced speed for better stability
     let animationFrameId;
-    const pausedState = {
-      "news-carousel": false,
-      "repos-carousel": false,
-      "knowledge-carousel": false,
-      "resource-carousel": false
-    };
+    
+    // Cache elements and set initial positions
+    const carousels = carouselIds.map(id => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      
+      const isReverse = id === "repos-carousel" || id === "resource-carousel" || id === "toolkits-carousel";
+      const halfWidth = el.scrollWidth / 2;
+      
+      if (isReverse) {
+        el.scrollLeft = halfWidth / 2;
+      }
+
+      return {
+        el,
+        id,
+        isReverse,
+        isPaused: false
+      };
+    }).filter(Boolean);
 
     const animate = () => {
-      carouselIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el || pausedState[id]) return;
+      carousels.forEach(c => {
+        if (c.isPaused) return;
 
+        const el = c.el;
         const halfWidth = el.scrollWidth / 2;
 
-        // Alternate directions: Repos and Resource Hub move Right-to-Left (Reverse)
-        if (id === "repos-carousel" || id === "resource-carousel") {
+        if (c.isReverse) {
           if (el.scrollLeft <= 0) {
             el.scrollLeft = halfWidth;
           } else {
             el.scrollLeft -= scrollSpeed;
           }
         } else {
-          // Others move Left-to-Right (Forward)
           if (el.scrollLeft >= halfWidth) {
             el.scrollLeft = 0;
           } else {
@@ -375,27 +532,49 @@ export default function Home() {
       animationFrameId = requestAnimationFrame(animate);
     };
 
-    carouselIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.onmouseenter = () => pausedState[id] = true;
-        el.onmouseleave = () => pausedState[id] = false;
-        // Touch support for mobile
-        el.ontouchstart = () => pausedState[id] = true;
-        el.ontouchend = () => pausedState[id] = false;
-      }
-    });
+    // Attach event listeners to cached items
+    carousels.forEach(c => {
+      const el = c.el;
+      let scrollTimer = null;
 
-    // Initial positions for reverse carousels
-    carouselIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el && (id === "repos-carousel" || id === "resource-carousel")) {
-        el.scrollLeft = el.scrollWidth / 4; // Start slightly offset
-      }
+      const setPaused = (val) => { c.isPaused = val; };
+
+      el.onmouseenter = () => setPaused(true);
+      el.onmouseleave = () => setPaused(false);
+      el.ontouchstart = () => setPaused(true);
+      el.ontouchend = () => setPaused(false);
+      
+      // Detect manual scrolling (trackpad/mousewheel)
+      el.onwheel = () => {
+        setPaused(true);
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => setPaused(false), 2000);
+      };
+
+      // Ensure manual scroll also pauses the auto-animation
+      el.onscroll = (e) => {
+        // Only trigger if it's a manual scroll (no animation frame active or user interaction)
+        if (e.isTrusted) { // true if triggered by user
+          setPaused(true);
+          clearTimeout(scrollTimer);
+          scrollTimer = setTimeout(() => setPaused(false), 2000);
+        }
+      };
     });
 
     animationFrameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrameId);
+    
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      carousels.forEach(c => {
+        if (c.el) {
+          c.el.onmouseenter = null;
+          c.el.onmouseleave = null;
+          c.el.ontouchstart = null;
+          c.el.ontouchend = null;
+        }
+      });
+    };
   }, [loading]);
 
   return (
@@ -421,7 +600,7 @@ export default function Home() {
             <div className="flex flex-col gap-24">
               {/* Horizontal News Carousel Section */}
               <section className="min-w-0 mt-4">
-                <SectionHeader title="LATEST_INTEL" count={news.length} link="/news" live />
+                <SectionHeader title="LATEST INTEL" count={news.length} link="/news" live />
 
 
 
@@ -432,7 +611,7 @@ export default function Home() {
 
                   <div
                     id="news-carousel"
-                    className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
+                    className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar px-4 md:px-10"
                   >
                     {[...news, ...news]
                       .filter(item => activeNewsCategory === "ALL" || item.category === activeNewsCategory)
@@ -472,25 +651,25 @@ export default function Home() {
 
             {/* Repos Section Carousel */}
             {/* <section> */}
-            <SectionHeader title="CODE_REPOS" link="/repos" count={repos.length || "48"} />
+            <SectionHeader title="CODE REPOS" link="/repos" count={reposTotal || repos.length || "0"} />
             <div className="relative group/carousel">
               <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
               <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
 
               <div
                 id="repos-carousel"
-                className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
+                className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar px-4 md:px-10"
               >
                 {[...repos, ...repos].map((repo, idx) => (
-                  <div key={`${repo._id}-${idx}`} className="min-w-[300px] md:min-w-[400px]">
+                  <div key={`${repo.id}-${idx}`} className="min-w-[300px] md:min-w-[400px]">
                     <RepoCard item={repo} />
                   </div>
                 ))}
-                {repos.length === 0 && [...Array(8)].map((_, i) => (
-                  <div key={i} className="min-w-[300px] md:min-w-[400px]">
-                    <RepoCard item={{ title: `system-module-${i}`, description: "Low-level system module for central processing units." }} />
+                {repos.length === 0 && (
+                  <div className="min-w-full text-center py-10 text-slate-500 font-bold uppercase tracking-widest text-xs">
+                    No repositories available.
                   </div>
-                ))}
+                )}
               </div>
 
               <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
@@ -506,27 +685,104 @@ export default function Home() {
             </div>
             {/* </section> */}
 
+            <SectionHeader title="WEBSITE DIRECTORY" link="/websites" count={websites.length || "0"} />
+            <div className="relative group/carousel">
+              <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
+
+              <div
+                id="websites-carousel"
+                className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar px-4 md:px-10"
+              >
+                {[...websites, ...websites].map((site, idx) => (
+                  <div key={`${site.id}-${idx}`} className="min-w-[240px] md:min-w-[300px]">
+                    <WebsiteCard item={site} />
+                  </div>
+                ))}
+                {websites.length === 0 && (
+                  <div className="min-w-full text-center py-10 text-slate-500 font-bold uppercase tracking-widest text-xs">
+                    No websites available.
+                  </div>
+                )}
+              </div>
+
+              <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                <button onClick={() => document.getElementById("websites-carousel").scrollBy({ left: -400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                  <ChevronDown size={20} className="rotate-90" />
+                </button>
+              </div>
+              <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                <button onClick={() => document.getElementById("websites-carousel").scrollBy({ left: 400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                  <ChevronDown size={20} className="-rotate-90" />
+                </button>
+              </div>
+            </div>
+
+            <section>
+              <SectionHeader title="TOOLKIT COLLECTIONS" link="/toolkits" count={toolkits.length} />
+              
+              <div className="relative group/carousel">
+                {/* Edge Fades */}
+                <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
+
+                <div
+                  id="toolkits-carousel"
+                  className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar px-4 md:px-10"
+                >
+                  {[...toolkits, ...toolkits].map((toolkit, idx) => (
+                    <div key={`${toolkit.id}-${idx}`} className="min-w-[280px] md:min-w-[350px]">
+                      <ToolkitCard item={toolkit} />
+                    </div>
+                  ))}
+                  {toolkits.length === 0 && (
+                    <div className="min-w-full text-center py-10 text-slate-500 font-bold uppercase tracking-widest text-xs">
+                      No toolkit collections available.
+                    </div>
+                  )}
+                </div>
+
+                {/* Carousel Controls */}
+                <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => document.getElementById("toolkits-carousel").scrollBy({ left: -400, behavior: "smooth" })}
+                    className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
+                  >
+                    <ChevronDown size={20} className="rotate-90" />
+                  </button>
+                </div>
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => document.getElementById("toolkits-carousel").scrollBy({ left: 400, behavior: "smooth" })}
+                    className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
+                  >
+                    <ChevronDown size={20} className="-rotate-90" />
+                  </button>
+                </div>
+              </div>
+            </section>
+
             {/* Knowledge Stream Carousel */}
             <section className="mt-3">
-              <SectionHeader title="KNOWLEDGE_STREAM" link="/research" count={research.length || "24"} />
+              <SectionHeader title="KNOWLEDGE STREAM" link="/research" count={research.length || "0"} />
               <div className="relative group/carousel">
                 <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
                 <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
 
                 <div
                   id="knowledge-carousel"
-                  className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
+                  className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar px-4 md:px-10"
                 >
-                  {[...research, ...research].map((res, idx) => (
-                    <div key={`${res._id}-${idx}`} className="min-w-[350px] md:min-w-[500px]">
+                  {(research || []).length > 0 ? [...research, ...research].map((res, idx) => (
+                    <div key={`${res.id || idx}-${idx}`} className="min-w-[350px] md:min-w-[500px]">
                       <KnowledgeCard item={res} />
                     </div>
-                  ))}
-                  {research.length === 0 && [1, 2, 3, 4].map(i => (
-                    <div key={i} className="min-w-[350px] md:min-w-[500px] snap-start">
-                      <KnowledgeCard item={{ title: `Research Protocol ${i}`, description: "Analyzing deep-level neural network latency and optimization." }} />
+                  )) : null}
+                  {research.length === 0 && (
+                    <div className="min-w-full text-center py-10 text-slate-500 font-bold uppercase tracking-widest text-xs">
+                      No research available.
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
@@ -542,47 +798,13 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Resource Hub */}
-            <section className="pb-32">
-              <SectionHeader title="RESOURCE_HUB" count="12" />
-              <div className="relative group/carousel">
-                <div
-                  id="resource-carousel"
-                  className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide no-scrollbar scroll-smooth px-4 md:px-10"
-                >
-                  {[1, 2].map((loop) => (
-                    <>
-                      <div className="min-w-[200px] md:min-w-[240px]">
-                        <ResourceHubCard title="NetSec Tools" icon={Shield} />
-                      </div>
-                      <div className="min-w-[200px] md:min-w-[240px]">
-                        <ResourceHubCard title="Data Vault" icon={Database} color="blue" />
-                      </div>
-                      <div className="min-w-[200px] md:min-w-[240px]">
-                        <ResourceHubCard title="Proxy Hub" icon={Globe} color="green" />
-                      </div>
-                      <div className="min-w-[200px] md:min-w-[240px]">
-                        <ResourceHubCard title="Crypt Library" icon={Shield} color="yellow" />
-                      </div>
-                      <div className="min-w-[200px] md:min-w-[240px]">
-                        <ResourceHubCard title="CLI Tools" icon={Terminal} color="purple" />
-                      </div>
-                      <div className="min-w-[200px] md:min-w-[240px]">
-                        <ResourceHubCard title="Cloud Sec" icon={Zap} color="orange" />
-                      </div>
-                    </>
-                  ))}
-                </div>
-              </div>
-            </section>
-
             <AdBanner position="BOTTOM_FULL" />
           </div>
         )}
 
         {activeTab === "NEWS" && (
           <div className="pb-20">
-            <SectionHeader title="GLOBAL_TECH_INTEL" count={news.length} />
+            <SectionHeader title="GLOBAL TECH INTEL" count={news.length} />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {news.map((item, idx) => (
                 <NewsCard key={idx} item={item} />

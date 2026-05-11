@@ -34,6 +34,7 @@ const iconForCategory = (name) => {
 };
 
 export default function CategoryManagementView() {
+  const PAGE_SIZE = 20;
   const [categories, setCategories] = useState([]);
   const [postCounts, setPostCounts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -41,6 +42,8 @@ export default function CategoryManagementView() {
   const [isAdding, setIsAdding] = useState(false);
   const [newCat, setNewCat] = useState({ name: "", type: "repo" });
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const filteredCategories = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -51,23 +54,25 @@ export default function CategoryManagementView() {
     );
   }, [categories, query]);
 
-  async function loadData(mounted = true) {
+  async function loadData(mounted = true, pageToLoad = 1) {
     setLoading(true);
     try {
       const [catRes, postRes] = await Promise.all([
-        client.get("/categories"),
+        client.get("/categories", { params: { page: pageToLoad, limit: PAGE_SIZE } }),
         client.get("/posts", { params: { page: 1, limit: 500 } }),
       ]);
       if (!mounted) return;
-      const catItems = catRes.data || [];
+      const catItems = catRes.data?.data || [];
       const posts = postRes.data?.data || [];
       const counts = {};
       posts.forEach((p) => {
-        const id = p.category?._id || p.category;
+        const id = p.category?.id || p.category;
         if (id) counts[id] = (counts[id] || 0) + 1;
       });
       setCategories(catItems);
       setPostCounts(counts);
+      setPage(catRes.data?.page || pageToLoad);
+      setTotalPages(catRes.data?.totalPages || 1);
     } finally {
       if (mounted) setLoading(false);
     }
@@ -75,7 +80,7 @@ export default function CategoryManagementView() {
 
   useEffect(() => {
     let mounted = true;
-    loadData(mounted);
+    loadData(mounted, 1);
     return () => { mounted = false; };
   }, []);
 
@@ -87,7 +92,7 @@ export default function CategoryManagementView() {
       await client.post("/categories", newCat, { authType: "admin" });
       setNewCat({ name: "", type: "repo" });
       setIsAdding(false);
-      await loadData(true);
+      await loadData(true, 1);
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to create category.");
     }
@@ -96,8 +101,8 @@ export default function CategoryManagementView() {
   async function toggleStatus(category) {
     try {
       const nextActive = !category.active;
-      await client.put(`/categories/${category._id}`, { active: nextActive }, { authType: "admin" });
-      await loadData(true);
+      await client.put(`/categories/${category.id}`, { active: nextActive }, { authType: "admin" });
+      await loadData(true, page);
     } catch (err) {
       setMessage("Failed to update status.");
     }
@@ -109,7 +114,7 @@ export default function CategoryManagementView() {
     try {
       setMessage("");
       await client.delete(`/categories/${categoryId}`, { authType: "admin" });
-      await loadData(true);
+      await loadData(true, page);
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to delete category.");
     }
@@ -120,8 +125,8 @@ export default function CategoryManagementView() {
     if (!nextName || !nextName.trim() || nextName.trim() === category.name) return;
     try {
       setMessage("");
-      await client.put(`/categories/${category._id}`, { name: nextName.trim() }, { authType: "admin" });
-      await loadData(true);
+      await client.put(`/categories/${category.id}`, { name: nextName.trim() }, { authType: "admin" });
+      await loadData(true, page);
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to update category.");
     }
@@ -251,10 +256,10 @@ export default function CategoryManagementView() {
                     ) : (
                       filteredCategories.map((c) => {
                         const Icon = iconForCategory(c.name);
-                        const count = postCounts[c._id] || 0;
+                        const count = postCounts[c.id] || 0;
                         const active = c.active !== false;
                         return (
-                          <tr key={c._id} className="group transition-all hover:bg-[#272a31]/50">
+                          <tr key={c.id} className="group transition-all hover:bg-[#272a31]/50">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-4">
                                 <div className="flex h-12 w-12 items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]/30 group-hover:border-[#00dbe9] transition-all">
@@ -294,7 +299,7 @@ export default function CategoryManagementView() {
                                   <Pencil size={18} />
                                 </button>
                                 <button
-                                  onClick={() => onDeleteCategory(c._id)}
+                                  onClick={() => onDeleteCategory(c.id)}
                                   className="p-2 transition-all text-[#849495] hover:text-[#ffb4ab] hover:bg-[#93000a]/20 border border-transparent hover:border-[#ffb4ab]"
                                 >
                                   <Trash2 size={18} />
@@ -307,6 +312,25 @@ export default function CategoryManagementView() {
                     )}
                   </tbody>
                 </table>
+                <div className="flex items-center justify-between px-6 py-3 border-t border-[#3b494b] text-xs font-bold text-[#849495]">
+                  <span>Page {page} of {totalPages}</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => loadData(true, page - 1)}
+                      disabled={loading || page <= 1}
+                      className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                    >
+                      Prev
+                    </button>
+                    <button
+                      onClick={() => loadData(true, page + 1)}
+                      disabled={loading || page >= totalPages}
+                      className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </main>
@@ -338,7 +362,7 @@ export default function CategoryManagementView() {
                     type="search"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="SEARCH_TAXONOMY..."
+                    placeholder="SEARCH TAXONOMY..."
                     className="bg-transparent text-sm font-bold outline-none placeholder:text-[#849495]/50 text-[#e1e2eb] uppercase tracking-widest w-full"
                   />
                 </div>
@@ -373,10 +397,10 @@ export default function CategoryManagementView() {
                 ) : (
                   filteredCategories.map((c) => {
                     const Icon = iconForCategory(c.name);
-                    const count = postCounts[c._id] || 0;
+                    const count = postCounts[c.id] || 0;
                     const active = c.active !== false;
                     return (
-                      <div key={c._id} className="p-4 border border-[#3b494b] flex items-center justify-between transition-all bg-[#161b22]/70 backdrop-blur-md">
+                      <div key={c.id} className="p-4 border border-[#3b494b] flex items-center justify-between transition-all bg-[#161b22]/70 backdrop-blur-md">
                         <div className="flex items-center gap-3 min-w-0">
                            <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]/30">
                               <Icon size={20} />

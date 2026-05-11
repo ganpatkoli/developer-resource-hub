@@ -56,7 +56,7 @@ export default function UserDashboard() {
   }
 
   function onEdit(item) {
-    setEditingId(item._id);
+    setEditingId(item.id);
     setForm({
       title: item.title,
       description: item.description,
@@ -141,9 +141,9 @@ export default function UserDashboard() {
         <ul className="mt-3 space-y-3">
           {resources.length === 0 && <li className="text-sm text-ink-muted">No resources yet.</li>}
           {resources.map((item) => {
-            const isFav = favorites.some((f) => f.kind === "userResource" && f.item?._id === item._id);
+            const isFav = favorites.some((f) => f.kind === "userResource" && f.item?.id === item.id);
             return (
-              <li key={item._id} className="rounded-lg border border-border p-3">
+              <li key={item.id} className="rounded-lg border border-border p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-semibold text-ink">{item.title}</h3>
                   <span className="text-xs text-ink-muted">{item.type}</span>
@@ -166,14 +166,14 @@ export default function UserDashboard() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => onDelete(item._id)}
+                    onClick={() => onDelete(item.id)}
                     className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700"
                   >
                     Delete
                   </button>
                   <button
                     type="button"
-                    onClick={() => toggleOwnFavorite(item._id)}
+                    onClick={() => toggleOwnFavorite(item.id)}
                     className="rounded border border-rose-300 px-3 py-1.5 text-sm text-rose-700"
                   >
                     {isFav ? "Unfavorite" : "Add to Favorites"}
@@ -190,7 +190,7 @@ export default function UserDashboard() {
         <ul className="mt-3 space-y-3">
           {favorites.length === 0 && <li className="text-sm text-ink-muted">No favorites yet.</li>}
           {favorites.map((fav) => (
-            <li key={fav._id} className="rounded-lg border border-border p-3">
+            <li key={fav.id} className="rounded-lg border border-border p-3">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="font-semibold text-ink">{fav.item?.title || "Untitled"}</h3>
                 <span className="text-xs text-ink-muted">{fav.kind === "post" ? "Public Post" : "My Resource"}</span>

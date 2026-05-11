@@ -1,18 +1,32 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
-import { getUserToken, getUserInfo, setUserToken } from "../api/client";
-import { Bell, Search, Settings, User, UserCircle } from "lucide-react";
+import { getUserToken, getUserInfo, setUserToken, getAdminToken, setAdminToken } from "../api/client";
+import { Bell, Search, Settings, User, UserCircle, LogOut } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
 export default function Header() {
   const { dark } = useTheme();
   const location = useLocation();
-  const [userLabel, setUserLabel] = useState(() => (getUserToken() ? getUserInfo()?.email : null));
+  const navigate = useNavigate();
+  const [userLabel, setUserLabel] = useState(null);
 
   useEffect(() => {
-    setUserLabel(getUserToken() ? getUserInfo()?.email ?? "User" : null);
+    const adminToken = getAdminToken();
+    const userToken = getUserToken();
+    if (adminToken || userToken) {
+      setUserLabel(getUserInfo()?.email || "Authenticated");
+    } else {
+      setUserLabel(null);
+    }
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    setUserToken(null);
+    setAdminToken(null);
+    setUserLabel(null);
+    navigate("/login");
+  };
 
   const navLinkClass = ({ isActive }) =>
     `text-[11px] font-black uppercase tracking-[0.2em] transition-all relative ${
@@ -30,13 +44,13 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-12 flex-1 lg:flex-none justify-center lg:justify-start">
-        <Link to="/" className={`text-lg lg:text-xl font-black tracking-[0.2em] transition-colors duration-300 ${dark ? "text-[#00dbe9] drop-shadow-[0_0_8px_rgba(0,219,233,0.4)]" : "text-cyan-600"}`}>
-          CYBER DISCOVERY
+        <Link to="/" className="flex items-center">
+          <img src="/LOGO.png" alt="AI Guardian Cloud logo" className="h-10 w-auto max-w-[160px] object-contain" />
         </Link>
         
         <nav className="hidden lg:flex items-center gap-8">
           <NavLink to="/" className={navLinkClass}>
-            TERMINAL
+            Home
             {isActive("/") && <span className="absolute -bottom-[25px] left-0 h-[2px] w-full bg-[#00dbe9] shadow-[0_0_8px_rgba(0,219,233,0.8)]" />}
           </NavLink>
           <NavLink to="/news" className={navLinkClass}>
@@ -54,6 +68,10 @@ export default function Header() {
           <NavLink to="/research" className={navLinkClass}>
             RESEARCH
             {isActive("/research") && <span className="absolute -bottom-[25px] left-0 h-[2px] w-full bg-[#00dbe9] shadow-[0_0_8px_rgba(0,219,233,0.8)]" />}
+          </NavLink>
+          <NavLink to="/toolkits" className={navLinkClass}>
+            TOOLKITS
+            {isActive("/toolkits") && <span className="absolute -bottom-[25px] left-0 h-[2px] w-full bg-[#00dbe9] shadow-[0_0_8px_rgba(0,219,233,0.8)]" />}
           </NavLink>
         </nav>
       </div>
@@ -73,9 +91,25 @@ export default function Header() {
             <ThemeToggle className={dark ? "!bg-[#161b22] !border-[#3b494b]" : "!bg-slate-50 !border-slate-200"} />
           </div>
           <Settings size={18} className="hidden lg:block text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" />
-          <Link to="/login">
-            <UserCircle size={22} className={`cursor-pointer transition-colors ${dark ? "text-slate-400 hover:text-[#00dbe9]" : "text-slate-500 hover:text-cyan-600"}`} />
-          </Link>
+          
+          {userLabel ? (
+            <div className="flex items-center gap-3">
+              <span className={`hidden md:block text-[9px] font-bold tracking-widest uppercase ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                {userLabel}
+              </span>
+              <button 
+                onClick={handleLogout}
+                className={`p-1.5 transition-all border ${dark ? "text-rose-400 border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10" : "text-rose-600 border-rose-100 bg-rose-50 hover:bg-rose-100"}`}
+                title="Secure Logout"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <Link to="/login">
+              <UserCircle size={22} className={`cursor-pointer transition-colors ${dark ? "text-slate-400 hover:text-[#00dbe9]" : "text-slate-500 hover:text-cyan-600"}`} />
+            </Link>
+          )}
         </div>
       </div>
     </header>

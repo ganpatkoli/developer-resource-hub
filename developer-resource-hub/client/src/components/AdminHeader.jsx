@@ -1,13 +1,20 @@
-import { Menu, Bell, User, LayoutGrid, ArrowLeft } from "lucide-react";
+import { Menu, Bell, User, LayoutGrid, ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "../context/ThemeContext";
 import { useAdminUI } from "../context/AdminUIContext";
+import { setUserToken, setAdminToken } from "../api/client";
 
 export default function AdminHeader({ title, backTo }) {
   const { dark } = useTheme();
   const { toggleSidebar } = useAdminUI();
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setUserToken(null);
+    setAdminToken(null);
+    navigate("/admin/login");
+  };
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-[#3b494b] bg-[#161b22]/90 px-4 lg:px-6 sticky top-0 z-10 backdrop-blur-md">
@@ -46,6 +53,13 @@ export default function AdminHeader({ title, backTo }) {
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-none border border-[#00dbe9] bg-[#00dbe9]/10 text-[#00dbe9]">
             <User size={18} />
           </div>
+          <button 
+            onClick={handleLogout}
+            className="flex h-9 w-9 shrink-0 items-center justify-center border border-rose-500/30 bg-rose-500/5 text-rose-500 hover:bg-rose-500/20 hover:border-rose-500 transition-all"
+            title="Admin Logout"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </header>

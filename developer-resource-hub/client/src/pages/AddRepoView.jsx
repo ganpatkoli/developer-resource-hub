@@ -56,7 +56,7 @@ export default function AddRepoView() {
             title: repo.title || "",
             description: repo.description || "",
             link: repo.link || "",
-            category: repo.category?._id || repo.category || "",
+            category: repo.category?.id || repo.category || "",
           });
         }
       } catch (err) {
@@ -168,7 +168,7 @@ export default function AddRepoView() {
                           className="w-full border border-[#3b494b] bg-[#10131a]/80 px-5 py-4 text-sm font-bold outline-none transition-all focus:border-[#00dbe9] text-[#e1e2eb]"
                         >
                           <option value="">Choose category...</option>
-                          {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       </div>
                     </div>
@@ -271,7 +271,7 @@ export default function AddRepoView() {
                           className="w-full border border-[#3b494b] bg-[#10131a]/80 px-4 py-3 text-xs font-bold focus:border-[#00dbe9] outline-none text-[#e1e2eb]"
                        >
                           <option value="">Category...</option>
-                          {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                        </select>
                     </div>
                     <div>

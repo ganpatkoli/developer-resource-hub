@@ -4,7 +4,7 @@ import {
   Rss, 
   Box, 
   BookOpen, 
-  Bookmark 
+  Layout 
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -17,7 +17,7 @@ export default function MobileNav() {
     { label: "REPOS", icon: Box, to: "/repos" },
     { label: "FEED", icon: Rss, to: "/news" },
     { label: "PAPERS", icon: BookOpen, to: "/research" },
-    { label: "SAVED", icon: Bookmark, to: "/saved" },
+    { label: "TOOLKITS", icon: Layout, to: "/toolkits" },
   ];
 
   return (

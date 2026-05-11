@@ -6,6 +6,7 @@ import {
   Globe,
   BookOpen,
   Settings,
+  Layers,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -15,6 +16,7 @@ const TABS = [
   { key: "repos", to: "/admin/repos", icon: Box, label: "Repos" },
   { key: "websites", to: "/admin/websites", icon: Globe, label: "Webs" },
   { key: "research", to: "/admin/research", icon: BookOpen, label: "Papers" },
+  { key: "toolkits", to: "/admin/toolkits", icon: Layers, label: "Tools" },
   { key: "ads", to: "/admin/ads", icon: Box, label: "Ads" },
   { key: "settings", to: "/admin/settings", icon: Settings, label: "Setup" },
 ];
@@ -30,15 +32,15 @@ export default function AdminFooter() {
           <div className="flex items-center gap-6 text-[10px] font-bold tracking-[0.2em] text-[#849495] uppercase">
             <div className="flex items-center gap-2">
                <div className="h-2 w-2 rounded-full bg-[#00dbe9] animate-pulse" />
-               <span className="text-[#00dbe9]/80">System_Online</span>
+               <span className="text-[#00dbe9]/80">System Online</span>
             </div>
             <span className="text-[#3b494b]">|</span>
-            <span>© 2026 Developer Resource Hub // CORE_V2.5</span>
+            <span>© 2026 Developer Resource Hub // CORE V2.5</span>
           </div>
           <div className="flex items-center gap-6 text-[10px] font-bold tracking-[0.2em] text-[#849495] uppercase">
             <span className="text-[#ebb2ff]/50">Status: Secure</span>
             <span className="text-[#3b494b]">|</span>
-            <span className="hover:text-[#00dbe9] transition-colors cursor-default">Cloud_Sync: Active</span>
+            <span className="hover:text-[#00dbe9] transition-colors cursor-default">Cloud Sync: Active</span>
           </div>
         </div>
       </footer>

@@ -37,8 +37,8 @@ export default function AdminAds() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (currentAd._id) {
-        await client.put(`/ads/${currentAd._id}`, currentAd);
+      if (currentAd.id) {
+        await client.put(`/ads/${currentAd.id}`, currentAd);
       } else {
         await client.post("/ads", currentAd);
       }
@@ -52,7 +52,7 @@ export default function AdminAds() {
 
   const toggleStatus = async (ad) => {
     try {
-      await client.put(`/ads/${ad._id}`, { isActive: !ad.isActive });
+      await client.put(`/ads/${ad.id}`, { isActive: !ad.isActive });
       fetchAds();
     } catch (err) {
       console.error(err);
@@ -97,7 +97,7 @@ export default function AdminAds() {
             {isEditing && (
               <div className="mb-12 bg-[#161b22] border border-[#3b494b] p-8 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-300 backdrop-blur-xl">
                 <h2 className="text-sm font-black uppercase tracking-widest mb-6 text-slate-400 border-b border-[#3b494b] pb-2">
-                  {currentAd._id ? "EDIT_CAMPAIGN" : "INITIALIZE_CAMPAIGN"}
+                  {currentAd.id ? "EDIT_CAMPAIGN" : "INITIALIZE_CAMPAIGN"}
                 </h2>
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
@@ -181,7 +181,7 @@ export default function AdminAds() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {ads.map(ad => (
-                <div key={ad._id} className="bg-[#161b22] border border-[#3b494b] rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all group shadow-xl">
+                <div key={ad.id} className="bg-[#161b22] border border-[#3b494b] rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all group shadow-xl">
                   <div className="h-40 relative">
                     <img src={ad.imageUrl} alt={ad.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute top-4 right-4">
@@ -216,7 +216,7 @@ export default function AdminAds() {
                         <button onClick={() => toggleStatus(ad)} className="p-2.5 rounded-lg bg-slate-800 border border-[#3b494b] text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all">
                           {ad.isActive ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
-                        <button onClick={() => deleteAd(ad._id)} className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all">
+                        <button onClick={() => deleteAd(ad.id)} className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -256,7 +256,7 @@ export default function AdminAds() {
             {/* ... ads map ... */}
             <div className="space-y-6">
               {ads.map(ad => (
-                 <div key={ad._id} className="bg-[#161b22] border border-[#3b494b] rounded-2xl overflow-hidden shadow-xl">
+                 <div key={ad.id} className="bg-[#161b22] border border-[#3b494b] rounded-2xl overflow-hidden shadow-xl">
                    <img src={ad.imageUrl} alt={ad.title} className="w-full h-32 object-cover" />
                    <div className="p-4">
                       <h3 className="text-white font-black text-sm uppercase mb-4">{ad.title}</h3>
@@ -264,7 +264,7 @@ export default function AdminAds() {
                         <div className="text-cyan-400 font-black text-xs">{ad.clickCount} CLICKS</div>
                         <div className="flex gap-2">
                            <button onClick={() => { setCurrentAd(ad); setIsEditing(true); }} className="p-2 text-slate-400"><Edit2 size={16} /></button>
-                           <button onClick={() => deleteAd(ad._id)} className="p-2 text-red-400"><Trash2 size={16} /></button>
+                           <button onClick={() => deleteAd(ad.id)} className="p-2 text-red-400"><Trash2 size={16} /></button>
                         </div>
                       </div>
                    </div>

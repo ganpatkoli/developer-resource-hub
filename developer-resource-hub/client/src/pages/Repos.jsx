@@ -117,7 +117,7 @@ export default function ReposPublic() {
   const repoCards = useMemo(() => {
     let filtered = posts.filter((p) => p.type === "repo");
     if (activeFilter !== "ALL") {
-      filtered = filtered.filter(p => p.category && p.category._id === activeFilter);
+      filtered = filtered.filter((p) => String(p.category?.id || p.categoryId || "") === String(activeFilter));
     }
     return filtered;
   }, [posts, activeFilter]);
@@ -133,7 +133,7 @@ export default function ReposPublic() {
           try {
             const { data } = await client.post("/github/meta", { url: repoPost.link });
             return [
-              repoPost._id,
+              repoPost.id,
               {
                 stars: data.stars,
                 forks: data.forks,
@@ -163,31 +163,10 @@ export default function ReposPublic() {
 
 
 
-  // Prepend dummy repos for visuals if not enough data
   const renderCards = (isDesktop = false) => {
-    const defaultCards = [
-      {
-        _id: "dummy1",
-        title: "kernel-probe",
-        description: "Low-level diagnostic toolkit for real-time memory inspection and automated kernel-mode threat detection in distributed systems.",
-        link: "https://github.com/cyber-intel/kernel-probe",
-        meta: { stars: 12400, forks: 842, language: "C++", ownerLogin: "cyber-intel", ownerAvatar: "https://github.com/github.png" }
-      },
-      {
-        _id: "dummy2",
-        title: "ghost-shell",
-        description: "Polymorphic encrypted terminal wrapper with zero-trace logging and automated proxy rotation for secure ops.",
-        link: "https://github.com/null-node/ghost-shell",
-        meta: { stars: 8100, forks: 2100, language: "Rust", ownerLogin: "null-node", ownerAvatar: "https://github.com/github.png" }
-      }
-    ];
-
-    const cardsToRender = repoCards.length > 0 ? repoCards : defaultCards;
-
-    return cardsToRender.map((repo, i) => {
-      const isDummy = repo._id && repo._id.startsWith("dummy");
-      const meta = isDummy ? repo.meta : (githubMetaMap[repo._id] || {});
-      const parsed = isDummy ? parseGithubRepo(repo.link) : parseGithubRepo(repo.link);
+    return repoCards.map((repo, i) => {
+      const meta = githubMetaMap[repo.id] || {};
+      const parsed = parseGithubRepo(repo.link);
       const owner = meta.ownerLogin || parsed?.owner || "unknown";
       const repoName = parsed?.repo || repo.title;
       const langColor =
@@ -205,7 +184,7 @@ export default function ReposPublic() {
           meta.language === "C++" ? "border-cyan-900/30 bg-cyan-900/20" : "border-[#1A2333] bg-[#0A1220]";
 
       return (
-        <article key={repo._id || i} className={`rounded-2xl border transition-all duration-300 group ${dark ? "border-[#1A2333] bg-[#111622] hover:border-cyan-500/30" : "border-slate-200 bg-white shadow-lg"} ${isDesktop ? "p-8" : "p-6"} flex flex-col`}>
+        <article key={repo.id || i} className={`rounded-2xl border transition-all duration-300 group ${dark ? "border-[#1A2333] bg-[#111622] hover:border-cyan-500/30" : "border-slate-200 bg-white shadow-lg"} ${isDesktop ? "p-8" : "p-6"} flex flex-col`}>
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-full border border-[#1A2333] overflow-hidden flex items-center justify-center bg-[#0B0F19]">
@@ -215,14 +194,14 @@ export default function ReposPublic() {
                 <h2 className={`font-black tracking-tight ${isDesktop ? "text-xl" : "text-md"} ${dark ? "text-white" : "text-slate-900"}`}>
                   <span className="text-cyan-400">{owner}</span> <span className="text-slate-500">/</span> {repoName}
                 </h2>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">v2.4.1 // PRODUCTION_READY</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">v2.4.1 // PRODUCTION READY</span>
               </div>
             </div>
             <button
-              onClick={() => toggleFavorite(repo._id)}
-              className={`transition-colors shrink-0 ${favoritePostIds.includes(repo._id) ? "text-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.2)]" : "text-slate-500 hover:text-cyan-400"}`}
+              onClick={() => toggleFavorite(repo.id)}
+              className={`transition-colors shrink-0 ${favoritePostIds.includes(repo.id) ? "text-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.2)]" : "text-slate-500 hover:text-cyan-400"}`}
             >
-              <Star size={20} fill={favoritePostIds.includes(repo._id) ? "currentColor" : "none"} />
+              <Star size={20} fill={favoritePostIds.includes(repo.id) ? "currentColor" : "none"} />
             </button>
           </div>
 
@@ -245,7 +224,7 @@ export default function ReposPublic() {
             href={repo.link}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackView(repo._id)}
+            onClick={() => trackView(repo.id)}
             className={`block w-full text-center rounded-xl border py-4 text-[11px] font-black tracking-[0.25em] transition-all uppercase ${dark
               ? "border-cyan-900/50 bg-[#0B0F19] text-cyan-500 hover:bg-cyan-400 hover:text-[#0B0F19]"
               : "border-cyan-100 bg-cyan-50 text-cyan-600 hover:bg-cyan-600 hover:text-white"
@@ -270,7 +249,7 @@ export default function ReposPublic() {
 
       {/* Background Grid Pattern - Only in Dark Mode */}
       {dark && (
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#84949510_1px,transparent_1px),linear-gradient(to_bottom,#84949510_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,#84949510_1px,transparent_1px),linear-gradient(to_bottom,#84949510_1px,transparent_1px)] bg-[size:32px_32px]"></div>
       )}
 
       {/* MOBILE LAYOUT */}
@@ -280,7 +259,7 @@ export default function ReposPublic() {
           <div className="flex items-center gap-2">
             <Database size={16} className={dark ? "text-cyan-400" : "text-blue-600"} />
             <h1 className={`text-[13px] font-black tracking-[0.15em] uppercase ${dark ? "text-cyan-400 shadow-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]" : "text-blue-600"}`}>
-              CORE_REPOS
+              CORE REPOS
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -315,9 +294,9 @@ export default function ReposPublic() {
             </button>
             {filters.map((f) => (
               <button
-                key={f._id}
-                onClick={() => setActiveFilter(f._id)}
-                className={`shrink-0 rounded-xl border px-4 py-2 text-[10px] font-black tracking-[0.15em] transition-all uppercase ${activeFilter === f._id
+                key={f.id}
+                onClick={() => setActiveFilter(f.id)}
+                className={`shrink-0 rounded-xl border px-4 py-2 text-[10px] font-black tracking-[0.15em] transition-all uppercase ${activeFilter === f.id
                   ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
                   : (dark ? "border-[#1A2333] bg-[#111622] text-slate-500 hover:text-slate-300" : "border-slate-200 bg-white text-slate-500 hover:text-slate-900")
                   }`}
@@ -329,7 +308,13 @@ export default function ReposPublic() {
 
           {/* Repos List */}
           <div className="space-y-4">
-            {renderCards(false)}
+            {repoCards.length > 0 ? (
+              renderCards(false)
+            ) : (
+              <div className={`rounded-xl border p-6 text-center text-sm ${dark ? "border-[#1A2333] bg-[#111622] text-slate-400" : "border-slate-200 bg-white text-slate-600"}`}>
+                No repositories found.
+              </div>
+            )}
           </div>
 
           {postsPayload.page < postsPayload.totalPages && (
@@ -418,9 +403,9 @@ export default function ReposPublic() {
             </button>
             {filters.map((f) => (
               <button
-                key={f._id}
-                onClick={() => setActiveFilter(f._id)}
-                className={`rounded-xl border px-6 py-3 text-[10px] font-black tracking-[0.15em] transition-all whitespace-nowrap uppercase ${activeFilter === f._id
+                key={f.id}
+                onClick={() => setActiveFilter(f.id)}
+                className={`rounded-xl border px-6 py-3 text-[10px] font-black tracking-[0.15em] transition-all whitespace-nowrap uppercase ${activeFilter === f.id
                   ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(0,219,233,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
                   : (dark ? "border-[#3b494b] bg-[#161b22] text-slate-500 hover:text-slate-300 hover:border-slate-700" : "border-slate-200 bg-white text-slate-400 hover:text-slate-900")
                   }`}
@@ -431,7 +416,13 @@ export default function ReposPublic() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {renderCards(true)}
+            {repoCards.length > 0 ? (
+              renderCards(true)
+            ) : (
+              <div className={`col-span-full rounded-xl border p-8 text-center text-sm ${dark ? "border-[#1A2333] bg-[#111622] text-slate-400" : "border-slate-200 bg-white text-slate-600"}`}>
+                No repositories found.
+              </div>
+            )}
           </div>
 
           {postsPayload.page < postsPayload.totalPages && (
@@ -450,7 +441,7 @@ export default function ReposPublic() {
 
         <footer className="mt-auto flex items-center justify-between border-t border-[#3b494b] py-6 px-8 text-[10px] font-semibold tracking-widest text-slate-600">
           <div className="flex gap-6">
-            <span className="text-cyan-600/50">SYSTEM_STATUS: OPTIMAL // © 2024 CYBER_INTEL</span>
+            <span className="text-cyan-600/50">SYSTEM STATUS: OPTIMAL // © 2024 AI GUARDIAN</span>
             <span>ENCRYPTED CONNECTION ESTABLISHED // TLS 1.3 // 256-BIT AES</span>
           </div>
           <div className="flex gap-6">

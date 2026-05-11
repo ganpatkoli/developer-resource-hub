@@ -18,6 +18,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { useAdminUI } from "../context/AdminUIContext";
 
 export default function ResearchManagementView() {
+  const PAGE_SIZE = 20;
   const { toggleSidebar } = useAdminUI();
   const navigate = useNavigate();
   const [researchItems, setResearchItems] = useState([]);
@@ -25,43 +26,50 @@ export default function ResearchManagementView() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const getCategory = (item) => item?.category || item?.Category || null;
 
-  async function loadData() {
+  async function loadData(pageToLoad = 1) {
     setLoading(true);
     try {
       const [postRes, catRes] = await Promise.all([
-        client.get("/research", { authType: "admin" }),
+        client.get("/research", {
+          authType: "admin",
+          params: {
+            limit: PAGE_SIZE,
+            page: pageToLoad,
+            ...(query.trim() ? { search: query.trim() } : {}),
+            ...(activeFilter !== "ALL" ? { category: activeFilter } : {}),
+          },
+        }),
         client.get("/categories?type=research")
       ]);
-      setResearchItems(postRes.data || []);
-      setCategories(catRes.data || []);
+      setResearchItems(postRes.data?.data || []);
+      setPage(postRes.data?.page || pageToLoad);
+      setTotalPages(postRes.data?.totalPages || 1);
+      setCategories(Array.isArray(catRes.data) ? catRes.data : (catRes.data?.data || []));
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData(1);
+  }, [query, activeFilter]);
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let result = researchItems;
-    
-    if (activeFilter !== "ALL") {
-      result = result.filter(item => item.category?._id === activeFilter);
-    }
-    
-    if (q) {
-      result = result.filter((item) => {
-        const title = String(item.title || "").toLowerCase();
-        const description = String(item.description || "").toLowerCase();
-        const catName = String(item.category?.name || "").toLowerCase();
-        return title.includes(q) || description.includes(q) || catName.includes(q);
-      });
-    }
-    
-    return result;
+    return (researchItems || []).filter((item) => {
+      const categoryId = String(getCategory(item)?.id || item.categoryId || "");
+      const matchesCategory = activeFilter === "ALL" || categoryId === String(activeFilter);
+      if (!matchesCategory) return false;
+      if (!q) return true;
+      const title = String(item.title || "").toLowerCase();
+      const description = String(item.description || "").toLowerCase();
+      const categoryName = String(getCategory(item)?.name || "").toLowerCase();
+      return title.includes(q) || description.includes(q) || categoryName.includes(q);
+    });
   }, [researchItems, query, activeFilter]);
 
   async function onDelete(id) {
@@ -69,7 +77,7 @@ export default function ResearchManagementView() {
     if (!ok) return;
     try {
       await client.delete(`/research/${id}`, { authType: "admin" });
-      await loadData();
+      await loadData(page);
     } catch {}
   }
 
@@ -87,7 +95,7 @@ export default function ResearchManagementView() {
           <main className="px-6 py-8 flex-1">
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-4xl font-bold tracking-tight text-[#e1e2eb] uppercase">Research_Vault</h1>
+                <h1 className="text-4xl font-bold tracking-tight text-[#e1e2eb] uppercase">Research Vault</h1>
                 <p className="mt-1 text-sm font-bold text-[#b9cacb]">Technical documentation and whitepaper archives.</p>
               </div>
               <div className="flex items-center gap-3">
@@ -102,7 +110,7 @@ export default function ResearchManagementView() {
                   />
                 </div>
                 <Link to="/admin/research/new" className="flex h-11 items-center justify-center gap-2 border border-[#00dbe9] bg-[#00dbe9]/10 hover:bg-[#00dbe9]/20 px-6 py-2.5 text-sm font-bold text-[#00dbe9] uppercase tracking-widest transition-all">
-                  <Plus size={18} /> New_Paper
+                  <Plus size={18} /> New Paper
                 </Link>
               </div>
             </div>
@@ -117,14 +125,14 @@ export default function ResearchManagementView() {
                     : "border-transparent text-[#849495] hover:text-[#e1e2eb]"
                   }`}
                >
-                  All_Archives
+                  All Archives
                </button>
                {categories.map((cat) => (
                   <button
-                    key={cat._id}
-                    onClick={() => setActiveFilter(cat._id)}
+                    key={cat.id}
+                    onClick={() => setActiveFilter(cat.id)}
                     className={`shrink-0 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${
-                      activeFilter === cat._id 
+                      activeFilter === cat.id 
                       ? "border-[#00dbe9] text-[#00dbe9] bg-[#00dbe9]/5" 
                       : "border-transparent text-[#849495] hover:text-[#e1e2eb]"
                     }`}
@@ -161,7 +169,7 @@ export default function ResearchManagementView() {
                     )}
                     {!loading &&
                       filteredItems.map((item) => (
-                        <tr key={item._id} className="transition-all hover:bg-[#272a31]/50 group">
+                        <tr key={item.id} className="transition-all hover:bg-[#272a31]/50 group">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]/30 group-hover:border-[#00dbe9] transition-all">
@@ -173,15 +181,15 @@ export default function ResearchManagementView() {
                           <td className="max-w-[360px] px-6 py-4 text-sm text-[#b9cacb] leading-relaxed line-clamp-2">{item.description}</td>
                           <td className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-[#849495]">
                              <span className="px-2 py-1 border border-[#3b494b] bg-[#10131a]">
-                                {item.category?.name || "Academic"}
+                                {getCategory(item)?.name || "Academic"}
                              </span>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => navigate(`/admin/research/${item._id}/edit`)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ebb2ff] hover:border-[#ebb2ff] transition-all">
+                              <button onClick={() => navigate(`/admin/research/${item.id}/edit`)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ebb2ff] hover:border-[#ebb2ff] transition-all">
                                 <Pencil size={15} />
                               </button>
-                              <button onClick={() => onDelete(item._id)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ffb4ab] hover:border-[#ffb4ab] transition-all">
+                              <button onClick={() => onDelete(item.id)} className="p-2 border border-[#3b494b] bg-[#10131a] text-[#849495] hover:text-[#ffb4ab] hover:border-[#ffb4ab] transition-all">
                                 <Trash2 size={15} />
                               </button>
                             </div>
@@ -190,6 +198,25 @@ export default function ResearchManagementView() {
                       ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between px-6 py-3 border-t border-[#3b494b] text-xs font-bold text-[#849495]">
+                <span>Page {page} of {totalPages}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => loadData(page - 1)}
+                    disabled={loading || page <= 1}
+                    className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => loadData(page + 1)}
+                    disabled={loading || page >= totalPages}
+                    className="px-3 py-1 border border-[#3b494b] disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </section>
           </main>
@@ -206,7 +233,7 @@ export default function ResearchManagementView() {
               >
                 <Menu size={20} strokeWidth={2.5} />
               </button>
-              <h1 className="text-xs font-bold tracking-[0.15em] uppercase text-[#e1e2eb]">Vault_Ctrl</h1>
+              <h1 className="text-xs font-bold tracking-[0.15em] uppercase text-[#e1e2eb]">Vault Ctrl</h1>
            </div>
            <div className="flex items-center gap-3">
               <Search size={20} className="text-[#00dbe9]" />
@@ -221,7 +248,7 @@ export default function ResearchManagementView() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="SEARCH_PAPERS..."
+                placeholder="SEARCH PAPERS..."
                 className="bg-transparent text-sm font-bold outline-none placeholder:text-[#849495]/50 text-[#e1e2eb] uppercase tracking-widest w-full"
               />
             </div>
@@ -244,10 +271,10 @@ export default function ResearchManagementView() {
              </button>
              {categories.map((cat) => (
                 <button
-                  key={cat._id}
-                  onClick={() => setActiveFilter(cat._id)}
+                  key={cat.id}
+                  onClick={() => setActiveFilter(cat.id)}
                   className={`shrink-0 px-5 py-2.5 text-[9px] font-bold uppercase tracking-[0.2em] transition-all border ${
-                    activeFilter === cat._id 
+                    activeFilter === cat.id 
                     ? "border-[#00dbe9] bg-[#00dbe9]/10 text-[#00dbe9]" 
                     : "border-[#3b494b] bg-[#161b22] text-[#849495]"
                   }`}
@@ -261,7 +288,7 @@ export default function ResearchManagementView() {
             {loading && <p className="text-center py-10 text-[10px] font-bold uppercase tracking-widest text-[#849495]">Accessing vault...</p>}
             {!loading &&
               filteredItems.map((item) => (
-                <article key={item._id} className="border border-[#3b494b] bg-[#161b22]/70 p-5 backdrop-blur-md">
+                <article key={item.id} className="border border-[#3b494b] bg-[#161b22]/70 p-5 backdrop-blur-md">
                   <div className="flex items-start gap-3">
                     <div className="mt-1 flex items-center justify-center bg-[#00dbe9]/10 text-[#00dbe9] border border-[#00dbe9]/30 h-10 w-10 shrink-0">
                       <FlaskConical size={16} />
@@ -270,15 +297,15 @@ export default function ResearchManagementView() {
                       <p className="font-bold text-[#e1e2eb] text-sm uppercase tracking-wide truncate">{item.title}</p>
                       <p className="mt-2 text-xs text-[#b9cacb] line-clamp-2 leading-relaxed">{item.description}</p>
                       <p className="mt-4 text-[9px] font-bold uppercase tracking-[0.15em] text-[#00dbe9] border-t border-[#3b494b]/50 pt-3">
-                         {item.category?.name || "Academic"}
+                         {getCategory(item)?.name || "Academic"}
                       </p>
                     </div>
                   </div>
                   <div className="mt-5 flex items-center justify-end gap-4 border-t border-[#3b494b] pt-4">
-                    <button onClick={() => navigate(`/admin/research/${item._id}/edit`)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#00dbe9]">
+                    <button onClick={() => navigate(`/admin/research/${item.id}/edit`)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#00dbe9]">
                       <Pencil size={18} />
                     </button>
-                    <button onClick={() => onDelete(item._id)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ffb4ab]">
+                    <button onClick={() => onDelete(item.id)} className="p-2 border border-[#3b494b] text-[#849495] hover:text-[#ffb4ab]">
                       <Trash2 size={18} />
                     </button>
                   </div>

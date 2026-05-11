@@ -34,7 +34,7 @@ export default function AdBanner({ position, variant = "horizontal" }) {
   const handleClick = async () => {
     if (!ad) return;
     try {
-      await client.post(`/ads/click/${ad._id}`);
+      await client.post(`/ads/click/${ad.id}`);
     } catch (err) {
       console.error("Ad Click Track Error:", err);
     }

@@ -37,7 +37,7 @@ export default function Favorites() {
     const body = kind === "post" ? { postId: itemId } : { resourceId: itemId };
     try {
       await client.post(endpoint, body, { authType: "user" });
-      setFavorites(prev => prev.filter(f => f.item?._id !== itemId));
+      setFavorites(prev => prev.filter(f => f.item?.id !== itemId));
     } catch (err) {
       console.error("Failed to remove favorite", err);
     }
@@ -71,13 +71,13 @@ export default function Favorites() {
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((fav) => (
-            <div key={fav._id} className={`group relative rounded-xl border p-4 transition-all hover:scale-[1.02] ${dark ? "border-slate-800 bg-slate-900/50 hover:bg-slate-900" : "border-slate-200 bg-white shadow-sm hover:shadow-md"}`}>
+            <div key={fav.id} className={`group relative rounded-xl border p-4 transition-all hover:scale-[1.02] ${dark ? "border-slate-800 bg-slate-900/50 hover:bg-slate-900" : "border-slate-200 bg-white shadow-sm hover:shadow-md"}`}>
               <div className="flex items-start justify-between gap-3 mb-2">
                 <h4 className={`text-sm font-bold truncate uppercase tracking-tight ${dark ? "text-slate-100" : "text-slate-900"}`}>
                   {fav.item?.title || "Untitled Resource"}
                 </h4>
                 <button
-                  onClick={() => removeFavorite(fav.kind, fav.item?._id)}
+                  onClick={() => removeFavorite(fav.kind, fav.item?.id)}
                   className="text-slate-500 hover:text-rose-500 transition-colors p-1"
                 >
                   <Trash2 size={14} />
@@ -134,7 +134,7 @@ export default function Favorites() {
             <Search size={18} className="text-slate-500" />
             <input
               type="text"
-              placeholder="SEARCH_VAULT_DATA..."
+              placeholder="SEARCH VAULT DATA..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-transparent text-xs font-bold tracking-widest outline-none placeholder:text-slate-600 uppercase"

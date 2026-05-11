@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Box, FlaskConical, LayoutGrid, Settings, BarChart2, User, Globe, X, AlignLeft } from "lucide-react";
+import { BookOpen, Box, FlaskConical, LayoutGrid, Settings, BarChart2, User, Globe, X, AlignLeft, Layers } from "lucide-react";
 import { useAdminUI } from "../context/AdminUIContext";
 
 const NAV_ITEMS = [
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: "repos", to: "/admin/repos", icon: Box, label: "GitHub Repos" },
   { key: "websites", to: "/admin/websites", icon: Globe, label: "System Websites" },
   { key: "research", to: "/admin/research", icon: BookOpen, label: "Research" },
+  { key: "toolkits", to: "/admin/toolkits", icon: Layers, label: "Toolkits" },
   { key: "ads", to: "/admin/ads", icon: Box, label: "Ads Manager" },
   { key: "settings", to: "/admin/settings", icon: Settings, label: "Settings" },
 ];
