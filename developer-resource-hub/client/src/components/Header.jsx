@@ -87,10 +87,10 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-4 lg:gap-5 lg:border-l lg:pl-6 border-[#3b494b]">
-          <div className="hidden lg:block">
+          {/* <div className="hidden lg:block">
             <ThemeToggle className={dark ? "!bg-[#161b22] !border-[#3b494b]" : "!bg-slate-50 !border-slate-200"} />
           </div>
-          <Settings size={18} className="hidden lg:block text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" />
+          <Settings size={18} className="hidden lg:block text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" /> */}
           
           {userLabel ? (
             <div className="flex items-center gap-3">

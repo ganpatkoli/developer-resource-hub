@@ -6,6 +6,7 @@ import { useSettings } from "../context/SettingsContext";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import AdBanner from "../components/AdBanner";
+import Button from "../components/Button";
 
 function parseGithubRepo(link) {
   try {
@@ -213,25 +214,24 @@ export default function ReposPublic() {
             <span className="flex items-center gap-2"><Star size={16} className="text-cyan-400/60" /> {formatCount(meta.stars || 0)}</span>
             <span className="flex items-center gap-2"><GitFork size={16} className="text-cyan-400/60" /> {formatCount(meta.forks || 0)}</span>
             <span className="flex items-center gap-2"><Eye size={16} className="text-cyan-400/60" /> {formatCount(repo.views || 0)}</span>
-            
-            <div className={`flex items-center gap-2.5 rounded-full px-3 py-1.5 border border-[#1A2333] bg-[#0B0F19] ml-auto`}>
+
+            <div className={`flex items-center gap-2.5 rounded-full px-3 py-1.5 border ml-auto ${dark ? "border-[#1A2333] bg-[#0B0F19]" : "border-slate-200 bg-slate-50"}`}>
               <span className={`h-2 w-2 rounded-full ${langColor} shadow-[0_0_8px_currentColor]`}></span>
-              <span className={`text-slate-300`}>{meta.language || "Unknown"}</span>
+              <span className={`${dark ? "text-slate-300" : "text-slate-600 font-medium"}`}>{meta.language || "Unknown"}</span>
             </div>
           </div>
 
-          <a
+          <Button
+            as="a"
             href={repo.link}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackView(repo.id)}
-            className={`block w-full text-center rounded-xl border py-4 text-[11px] font-black tracking-[0.25em] transition-all uppercase ${dark
-              ? "border-cyan-900/50 bg-[#0B0F19] text-cyan-500 hover:bg-cyan-400 hover:text-[#0B0F19]"
-              : "border-cyan-100 bg-cyan-50 text-cyan-600 hover:bg-cyan-600 hover:text-white"
-              }`}
+            variant="primary"
+            className="w-full"
           >
             View Repository
-          </a>
+          </Button>
         </article>
       );
     });
@@ -283,26 +283,22 @@ export default function ReposPublic() {
 
           {/* Filters */}
           <div className="mb-6 flex gap-2 overflow-x-auto pb-4 scrollbar-hide no-scrollbar -mx-4 px-4">
-            <button
+            <Button
+              variant="filter"
+              active={activeFilter === "ALL"}
               onClick={() => setActiveFilter("ALL")}
-              className={`shrink-0 rounded-xl border px-4 py-2 text-[10px] font-black tracking-[0.15em] transition-all uppercase ${activeFilter === "ALL"
-                ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
-                : (dark ? "border-[#1A2333] bg-[#111622] text-slate-500 hover:text-slate-300" : "border-slate-200 bg-white text-slate-500 hover:text-slate-900")
-                }`}
             >
               ALL SYSTEMS
-            </button>
+            </Button>
             {filters.map((f) => (
-              <button
+              <Button
                 key={f.id}
+                variant="filter"
+                active={activeFilter === f.id}
                 onClick={() => setActiveFilter(f.id)}
-                className={`shrink-0 rounded-xl border px-4 py-2 text-[10px] font-black tracking-[0.15em] transition-all uppercase ${activeFilter === f.id
-                  ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
-                  : (dark ? "border-[#1A2333] bg-[#111622] text-slate-500 hover:text-slate-300" : "border-slate-200 bg-white text-slate-500 hover:text-slate-900")
-                  }`}
               >
                 {f.name}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -319,13 +315,13 @@ export default function ReposPublic() {
 
           {postsPayload.page < postsPayload.totalPages && (
             <div className="mt-8 text-center">
-              <button
+              <Button
+                variant="secondary"
                 onClick={loadMore}
                 disabled={loading}
-                className="rounded-full bg-[#111622] border border-[#1A2333] px-6 py-3 text-[11px] font-bold tracking-[0.15em] text-slate-300 uppercase hover:text-cyan-400 hover:border-cyan-500/50 transition-all"
               >
                 {loading ? "Decrypting..." : "Load More Repos"}
-              </button>
+              </Button>
             </div>
           )}
         </main>
@@ -366,7 +362,7 @@ export default function ReposPublic() {
       </div>
 
       {/* DESKTOP LAYOUT */}
-      <div className={`mx-auto hidden min-h-screen max-w-[1400px] flex-col lg:flex transition-colors duration-300 ${dark ? "bg-[#10131a]" : "bg-white"}`}>
+      <div className={`mx-auto hidden min-h-screen max-w-[1400px] flex-col lg:flex transition-colors duration-300 bg-transparent`}>
 
         <main className="flex-1 px-8 py-12 max-w-[1200px] mx-auto w-full animate-fade-in-up">
           <div className="mb-10 text-center">
@@ -392,26 +388,22 @@ export default function ReposPublic() {
           </div>
 
           <div className="mb-10 flex gap-2.5 overflow-x-auto pb-4 scrollbar-hide no-scrollbar">
-            <button
+            <Button
+              variant="filter"
+              active={activeFilter === "ALL"}
               onClick={() => setActiveFilter("ALL")}
-              className={`rounded-xl border px-6 py-3 text-[10px] font-black tracking-[0.15em] transition-all whitespace-nowrap uppercase ${activeFilter === "ALL"
-                ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(0,219,233,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
-                : (dark ? "border-[#3b494b] bg-[#161b22] text-slate-500 hover:text-slate-300 hover:border-slate-700" : "border-slate-200 bg-white text-slate-400 hover:text-slate-900")
-                }`}
             >
               ALL SYSTEMS
-            </button>
+            </Button>
             {filters.map((f) => (
-              <button
+              <Button
                 key={f.id}
+                variant="filter"
+                active={activeFilter === f.id}
                 onClick={() => setActiveFilter(f.id)}
-                className={`rounded-xl border px-6 py-3 text-[10px] font-black tracking-[0.15em] transition-all whitespace-nowrap uppercase ${activeFilter === f.id
-                  ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(0,219,233,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
-                  : (dark ? "border-[#3b494b] bg-[#161b22] text-slate-500 hover:text-slate-300 hover:border-slate-700" : "border-slate-200 bg-white text-slate-400 hover:text-slate-900")
-                  }`}
               >
                 {f.name}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -427,29 +419,18 @@ export default function ReposPublic() {
 
           {postsPayload.page < postsPayload.totalPages && (
             <div className="flex flex-col items-center justify-center mt-8 pb-10">
-              <button
+              <Button
+                variant="secondary"
                 onClick={loadMore}
                 disabled={loading}
-                className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase hover:text-cyan-400 transition-colors flex flex-col items-center gap-2"
               >
                 {loading ? "PROCESSING..." : "LOAD MORE ARCHIVES"}
-                {!loading && <ChevronDown size={20} className="animate-bounce mt-1" />}
-              </button>
+              </Button>
             </div>
           )}
         </main>
 
-        <footer className="mt-auto flex items-center justify-between border-t border-[#3b494b] py-6 px-8 text-[10px] font-semibold tracking-widest text-slate-600">
-          <div className="flex gap-6">
-            <span className="text-cyan-600/50">SYSTEM STATUS: OPTIMAL // © 2024 AI GUARDIAN</span>
-            <span>ENCRYPTED CONNECTION ESTABLISHED // TLS 1.3 // 256-BIT AES</span>
-          </div>
-          <div className="flex gap-6">
-            <span className="hover:text-slate-400 cursor-pointer transition-colors">Security Protocols</span>
-            <span className="hover:text-slate-400 cursor-pointer transition-colors">API Docs</span>
-            <span className="hover:text-slate-400 cursor-pointer transition-colors">Network Topology</span>
-          </div>
-        </footer>
+       
       </div>
 
     </div>

@@ -30,6 +30,7 @@ import {
 import ThemeToggle from "../components/ThemeToggle";
 import { useTheme } from "../context/ThemeContext";
 import AdBanner from "../components/AdBanner";
+import Button from "../components/Button";
 
 function parseGithubRepo(link) {
   try {
@@ -113,12 +114,12 @@ function HeroSlider() {
               {slide.desc}
             </p>
             <div className="flex items-center gap-3">
-              <button className="bg-cyan-500 hover:bg-cyan-400 text-[#10131a] font-black text-[9px] md:text-[11px] uppercase tracking-widest px-5 md:px-8 py-2.5 md:py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+              <Button variant="primary">
                 {slide.btn1.split(" ")[0]}
-              </button>
-              <button className="bg-transparent border border-[#3b494b] hover:border-cyan-500/50 text-white font-black text-[9px] md:text-[11px] uppercase tracking-widest px-5 md:px-8 py-2.5 md:py-3.5 rounded-xl transition-all">
+              </Button>
+              <Button variant="secondary">
                 {slide.btn2.split(" ")[0]}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -138,11 +139,12 @@ function HeroSlider() {
 }
 
 function SectionHeader({ title, count, link, live }) {
+  const { dark } = useTheme();
   return (
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-4">
         {/* <span className="text-cyan-500 font-black text-xl">/</span> */}
-        <h2 className="text-[13px] font-black tracking-[0.2em] text-white uppercase">{title}</h2>
+        <h2 className={`text-[13px] font-black tracking-[0.2em] uppercase ${dark ? "text-white" : "text-slate-900"}`}>{title}</h2>
         {live && (
           <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
             <span className="relative flex h-1.5 w-1.5">
@@ -152,7 +154,7 @@ function SectionHeader({ title, count, link, live }) {
             <span className="text-cyan-400 text-[8px] font-black tracking-widest uppercase">LIVE FEED</span>
           </div>
         )}
-        {count && <span className="hidden sm:block bg-[#161b22] text-slate-500 text-[10px] px-2 py-0.5 rounded border border-[#3b494b] font-black">{count} ACTIVE</span>}
+        {count && <span className={`hidden sm:block text-[10px] px-2 py-0.5 rounded border font-black ${dark ? "bg-[#161b22] text-slate-500 border-[#3b494b]" : "bg-slate-100 text-slate-500 border-slate-200"}`}>{count} ACTIVE</span>}
       </div>
       <Link to={link || "#"} className="text-[10px] font-black tracking-widest text-slate-500 hover:text-cyan-400 transition-colors uppercase flex items-center gap-2 group">
         View All <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -215,15 +217,17 @@ const RepoCard = React.memo(({ item }) => {
         </div>
       </div>
 
-      <a
+      <Button
+        as="a"
         href={normalizeExternalUrl(item.link)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackPostView(item.id)}
-        className={`w-full py-4 rounded-xl border border-cyan-500/20 font-black text-[11px] tracking-[0.25em] uppercase text-center transition-all ${dark ? "bg-black/40 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:border-cyan-500" : "bg-cyan-50 border-cyan-100 text-cyan-600 hover:bg-cyan-600 hover:text-white"}`}
+        variant="primary"
+        className="w-full"
       >
         View Repository
-      </a>
+      </Button>
     </div>
   );
 });
@@ -277,15 +281,17 @@ const WebsiteCard = React.memo(({ item }) => {
         </div>
       </div>
 
-      <a
+      <Button
+        as="a"
         href={normalizeExternalUrl(item.link)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackPostView(item.id)}
-        className={`w-full py-2.5 rounded-lg border font-black text-[10px] tracking-[0.2em] uppercase text-center transition-all ${dark ? "border-cyan-800/40 bg-cyan-950/20 text-cyan-300 hover:bg-cyan-400 hover:text-[#0B0F19] hover:border-cyan-400" : "bg-cyan-50 border-cyan-100 text-cyan-600 hover:bg-cyan-600 hover:text-white"}`}
+        variant="primary"
+        className="w-full"
       >
         Visit Website
-      </a>
+      </Button>
     </div>
   );
 });
@@ -606,8 +612,8 @@ export default function Home() {
 
                 <div className="relative group/carousel">
                   {/* Edge Fades */}
-                  <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
-                  <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
+                  <div className={`absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
+                  <div className={`absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
 
                   <div
                     id="news-carousel"
@@ -629,7 +635,7 @@ export default function Home() {
                   <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
                     <button
                       onClick={() => document.getElementById("news-carousel").scrollBy({ left: -400, behavior: "smooth" })}
-                      className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
+                      className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}
                     >
                       <ChevronDown size={20} className="rotate-90" />
                     </button>
@@ -637,7 +643,7 @@ export default function Home() {
                   <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
                     <button
                       onClick={() => document.getElementById("news-carousel").scrollBy({ left: 400, behavior: "smooth" })}
-                      className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
+                      className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}
                     >
                       <ChevronDown size={20} className="-rotate-90" />
                     </button>
@@ -653,8 +659,8 @@ export default function Home() {
             {/* <section> */}
             <SectionHeader title="CODE REPOS" link="/repos" count={reposTotal || repos.length || "0"} />
             <div className="relative group/carousel">
-              <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
+              <div className={`absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
+              <div className={`absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
 
               <div
                 id="repos-carousel"
@@ -673,12 +679,12 @@ export default function Home() {
               </div>
 
               <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: -400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: -400, behavior: "smooth" })} className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}>
                   <ChevronDown size={20} className="rotate-90" />
                 </button>
               </div>
               <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: 400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                <button onClick={() => document.getElementById("repos-carousel").scrollBy({ left: 400, behavior: "smooth" })} className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}>
                   <ChevronDown size={20} className="-rotate-90" />
                 </button>
               </div>
@@ -687,8 +693,8 @@ export default function Home() {
 
             <SectionHeader title="WEBSITE DIRECTORY" link="/websites" count={websites.length || "0"} />
             <div className="relative group/carousel">
-              <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
+              <div className={`absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
+              <div className={`absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
 
               <div
                 id="websites-carousel"
@@ -707,12 +713,12 @@ export default function Home() {
               </div>
 
               <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                <button onClick={() => document.getElementById("websites-carousel").scrollBy({ left: -400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                <button onClick={() => document.getElementById("websites-carousel").scrollBy({ left: -400, behavior: "smooth" })} className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}>
                   <ChevronDown size={20} className="rotate-90" />
                 </button>
               </div>
               <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                <button onClick={() => document.getElementById("websites-carousel").scrollBy({ left: 400, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                <button onClick={() => document.getElementById("websites-carousel").scrollBy({ left: 400, behavior: "smooth" })} className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}>
                   <ChevronDown size={20} className="-rotate-90" />
                 </button>
               </div>
@@ -723,8 +729,8 @@ export default function Home() {
               
               <div className="relative group/carousel">
                 {/* Edge Fades */}
-                <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
-                <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
+                <div className={`absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
+                <div className={`absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
 
                 <div
                   id="toolkits-carousel"
@@ -746,7 +752,7 @@ export default function Home() {
                 <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
                   <button
                     onClick={() => document.getElementById("toolkits-carousel").scrollBy({ left: -400, behavior: "smooth" })}
-                    className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
+                    className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}
                   >
                     <ChevronDown size={20} className="rotate-90" />
                   </button>
@@ -754,7 +760,7 @@ export default function Home() {
                 <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
                   <button
                     onClick={() => document.getElementById("toolkits-carousel").scrollBy({ left: 400, behavior: "smooth" })}
-                    className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 hover:border-cyan-500/50 transition-all shadow-xl"
+                    className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}
                   >
                     <ChevronDown size={20} className="-rotate-90" />
                   </button>
@@ -766,8 +772,8 @@ export default function Home() {
             <section className="mt-3">
               <SectionHeader title="KNOWLEDGE STREAM" link="/research" count={research.length || "0"} />
               <div className="relative group/carousel">
-                <div className="absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-[#10131a] to-transparent z-10 pointer-events-none" />
-                <div className="absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-[#10131a] to-transparent z-10 pointer-events-none" />
+                <div className={`absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
+                <div className={`absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l ${dark ? "from-[#10131a]" : "from-slate-50"} to-transparent z-10 pointer-events-none`} />
 
                 <div
                   id="knowledge-carousel"
@@ -786,12 +792,12 @@ export default function Home() {
                 </div>
 
                 <div className="absolute top-1/2 -translate-y-1/2 left-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                  <button onClick={() => document.getElementById("knowledge-carousel").scrollBy({ left: -500, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                  <button onClick={() => document.getElementById("knowledge-carousel").scrollBy({ left: -500, behavior: "smooth" })} className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}>
                     <ChevronDown size={20} className="rotate-90" />
                   </button>
                 </div>
                 <div className="absolute top-1/2 -translate-y-1/2 right-2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-                  <button onClick={() => document.getElementById("knowledge-carousel").scrollBy({ left: 500, behavior: "smooth" })} className="p-3 rounded-full bg-[#161b22] border border-[#3b494b] text-white hover:text-cyan-400 shadow-xl">
+                  <button onClick={() => document.getElementById("knowledge-carousel").scrollBy({ left: 500, behavior: "smooth" })} className={`p-3 rounded-full border shadow-xl transition-all ${dark ? "bg-[#161b22] border-[#3b494b] text-white hover:text-cyan-400" : "bg-white border-slate-200 text-slate-700 hover:text-cyan-600 hover:border-cyan-400"}`}>
                     <ChevronDown size={20} className="-rotate-90" />
                   </button>
                 </div>
@@ -817,9 +823,9 @@ export default function Home() {
           <div className="py-20 text-center border border-dashed border-[#3b494b] rounded-2xl bg-[#161b22]/50">
             <h3 className="text-slate-400 font-black text-sm uppercase tracking-widest">Accessing Restricted Archive...</h3>
             <p className="text-slate-600 text-xs mt-2 uppercase">Please use the main navigation to browse full catalogs.</p>
-            <Link to={`/${activeTab.toLowerCase()}`} className="mt-6 inline-block bg-cyan-500 text-[#10131a] px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest">
+            <Button as="Link" to={`/${activeTab.toLowerCase()}`} variant="primary" className="mt-6">
               Open Full Directory
-            </Link>
+            </Button>
           </div>
         )}
       </main>

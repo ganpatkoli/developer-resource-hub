@@ -7,6 +7,7 @@ import { useSettings } from "../context/SettingsContext";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import AdBanner from "../components/AdBanner";
+import Button from "../components/Button";
 
 const trackView = (id) => {
   if (!id) return;
@@ -182,12 +183,28 @@ export default function ResearchPublic() {
               </p>
             </div>
             <div className="flex gap-3">
-              <a href={paper.documentUrl || "#"} onClick={() => trackView(paper.id)} target="_blank" rel="noreferrer" className={`flex-1 rounded-lg py-3.5 text-center text-[10px] font-black tracking-[0.2em] transition-all uppercase shadow-[0_0_15px_rgba(34,211,238,0.2)] ${dark ? "bg-cyan-400 text-[#0B0F19] hover:bg-cyan-300" : "bg-cyan-600 text-white hover:bg-cyan-700"}`}>
+              <Button
+                as="a"
+                href={paper.documentUrl || "#"}
+                onClick={() => trackView(paper.id)}
+                target="_blank"
+                rel="noreferrer"
+                variant="primary"
+                className="flex-1"
+              >
                 Access Archive ↗
-              </a>
-              <a href={paper.documentUrl || "#"} onClick={() => trackView(paper.id)} target="_blank" rel="noreferrer" className={`flex items-center justify-center rounded-lg border px-4 transition-all ${dark ? "border-[#1A2333] text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50" : "border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200"}`}>
+              </Button>
+              <Button
+                as="a"
+                href={paper.documentUrl || "#"}
+                onClick={() => trackView(paper.id)}
+                target="_blank"
+                rel="noreferrer"
+                variant="secondary"
+                className="px-4"
+              >
                 <Download size={18} />
-              </a>
+              </Button>
             </div>
           </article>
         );
@@ -202,7 +219,7 @@ export default function ResearchPublic() {
             <Star size={20} fill={favoritePostIds.includes(paper.id) ? "currentColor" : "none"} />
           </button>
           <div className="flex gap-4 mb-4 pr-8">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0B0F19] border border-[#1A2333] text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border ${dark ? "bg-[#0B0F19] border-[#1A2333] text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.1)]" : "bg-cyan-50 border-cyan-100 text-cyan-600 shadow-sm"}`}>
               {getDummyIcon(i)}
             </div>
             <div>
@@ -226,9 +243,17 @@ export default function ResearchPublic() {
                 </span>
               ))}
             </div>
-            <a href={paper.documentUrl || "#"} onClick={() => trackView(paper.id)} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-3 text-[10px] font-black tracking-[0.1em] text-[#0B0F19] hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]">
-              <Download size={14} /> PDF
-            </a>
+            <Button
+              as="a"
+              href={paper.documentUrl || "#"}
+              onClick={() => trackView(paper.id)}
+              target="_blank"
+              rel="noreferrer"
+              variant="primary"
+              className="px-4"
+            >
+              <Download size={14} className="inline mr-2" /> PDF
+            </Button>
           </div>
         </article>
       );
@@ -236,7 +261,7 @@ export default function ResearchPublic() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-[#10131a] text-slate-200" : "bg-slate-50 text-slate-900"} font-sans tracking-wide relative overflow-hidden`}>
+    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-[#0B0F19] text-slate-200" : "bg-slate-50 text-slate-900"} font-sans tracking-wide relative overflow-hidden`}>
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDesc} />
@@ -287,26 +312,22 @@ export default function ResearchPublic() {
           </div>
 
           <div className="mb-8 flex gap-2 overflow-x-auto pb-4 scrollbar-hide no-scrollbar -mx-4 px-4">
-            <button
+            <Button
+              variant="filter"
+              active={activeFilter === "ALL"}
               onClick={() => setActiveFilter("ALL")}
-              className={`shrink-0 rounded-xl border px-5 py-2.5 text-[10px] font-black tracking-[0.15em] transition-all uppercase ${activeFilter === "ALL"
-                  ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(0,219,233,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
-                  : (dark ? "border-[#3b494b] bg-[#161b22] text-slate-500 hover:text-slate-300" : "border-slate-200 bg-white text-slate-500 hover:text-slate-900")
-                }`}
             >
               ALL ARCHIVES
-            </button>
+            </Button>
             {filters.map((f) => (
-              <button
+              <Button
                 key={f.id}
+                variant="filter"
+                active={activeFilter === f.id}
                 onClick={() => setActiveFilter(f.id)}
-                className={`shrink-0 rounded-xl border px-5 py-2.5 text-[10px] font-black tracking-[0.15em] transition-all uppercase ${activeFilter === f.id
-                    ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(0,219,233,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
-                    : (dark ? "border-[#3b494b] bg-[#161b22] text-slate-500 hover:text-slate-300" : "border-slate-200 bg-white text-slate-500 hover:text-slate-900")
-                  }`}
               >
                 {f.name}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -327,13 +348,13 @@ export default function ResearchPublic() {
 
           {researchPayload.page < researchPayload.totalPages && (
             <div className="mt-8 text-center">
-              <button
+              <Button
+                variant="secondary"
                 onClick={loadMore}
                 disabled={loading}
-                className="rounded-full bg-[#111622] border border-[#1A2333] px-6 py-3 text-[11px] font-bold tracking-[0.15em] text-slate-300 uppercase hover:text-cyan-400 hover:border-cyan-500/50 transition-all"
               >
                 {loading ? "Decrypting..." : "Load More Archives"}
-              </button>
+              </Button>
             </div>
           )}
         </main>
@@ -342,7 +363,7 @@ export default function ResearchPublic() {
           <SlidersHorizontal size={24} />
         </button>
 
-        <nav className="fixed bottom-0 left-0 w-full border-t border-[#1A2333] bg-[#0B0F19]/95 backdrop-blur-md z-30 pb-safe">
+        <nav className={`fixed bottom-0 left-0 w-full border-t backdrop-blur-md z-30 pb-safe ${dark ? "border-[#1A2333] bg-[#0B0F19]/95" : "border-slate-200 bg-white/95 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]"}`}>
           <ul className="flex justify-around px-2 py-3">
             <li className="flex flex-col items-center gap-1.5 cursor-pointer text-slate-500 hover:text-slate-300">
               <Link to="/" className="flex flex-col items-center gap-1.5">
@@ -375,7 +396,7 @@ export default function ResearchPublic() {
       </div>
 
       {/* DESKTOP LAYOUT */}
-      <div className={`mx-auto hidden min-h-screen max-w-[1400px] flex-col lg:flex transition-colors duration-300 ${dark ? "bg-[#10131a]" : "bg-white"}`}>
+      <div className={`mx-auto hidden min-h-screen max-w-[1400px] flex-col lg:flex transition-colors duration-300 bg-transparent`}>
 
         <main className="flex-1 px-8 py-12 max-w-[1200px] mx-auto w-full animate-fade-in-up">
           <div className="mb-10 text-center">
@@ -401,26 +422,22 @@ export default function ResearchPublic() {
           </div>
 
           <div className="mb-10 flex gap-2.5 overflow-x-auto pb-4 scrollbar-hide no-scrollbar">
-            <button
+            <Button
+              variant="filter"
+              active={activeFilter === "ALL"}
               onClick={() => setActiveFilter("ALL")}
-              className={`rounded-xl border px-6 py-3 text-[10px] font-black tracking-[0.15em] transition-all whitespace-nowrap uppercase ${activeFilter === "ALL"
-                ? (dark ? "border-[#00dbe9]/50 bg-[#00dbe9]/10 text-[#00dbe9] shadow-[0_0_15px_rgba(0,219,233,0.1)]" : "border-blue-400 bg-blue-50 text-blue-600 shadow-sm")
-                : (dark ? "border-[#3b494b] bg-[#161b22] text-slate-500 hover:text-slate-300 hover:border-slate-700" : "border-slate-200 bg-white text-slate-400 hover:text-slate-900")
-                }`}
             >
               ALL ARCHIVES
-            </button>
+            </Button>
             {filters.map((f) => (
-              <button
+              <Button
                 key={f.id}
+                variant="filter"
+                active={activeFilter === f.id}
                 onClick={() => setActiveFilter(f.id)}
-                className={`rounded-xl border px-6 py-3 text-[10px] font-black tracking-[0.15em] transition-all whitespace-nowrap uppercase ${activeFilter === f.id
-                  ? (dark ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(0,219,233,0.1)]" : "border-cyan-400 bg-cyan-50 text-cyan-600 shadow-sm")
-                  : (dark ? "border-[#3b494b] bg-[#161b22] text-slate-500 hover:text-slate-300 hover:border-slate-700" : "border-slate-200 bg-white text-slate-400 hover:text-slate-900")
-                  }`}
               >
                 {f.name}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -430,14 +447,13 @@ export default function ResearchPublic() {
 
           {researchPayload.page < researchPayload.totalPages && (
             <div className="flex flex-col items-center justify-center mt-8 pb-10">
-              <button
+              <Button
+                variant="secondary"
                 onClick={loadMore}
                 disabled={loading}
-                className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase hover:text-cyan-400 transition-colors flex flex-col items-center gap-2"
               >
                 {loading ? "PROCESSING..." : "LOAD MORE ARCHIVES"}
-                {!loading && <ChevronDown size={20} className="animate-bounce mt-1" />}
-              </button>
+              </Button>
             </div>
           )}
         </main>

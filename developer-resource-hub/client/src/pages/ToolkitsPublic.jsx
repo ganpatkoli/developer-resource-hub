@@ -6,6 +6,7 @@ import { useSettings } from "../context/SettingsContext";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import AdBanner from "../components/AdBanner";
+import Button from "../components/Button";
 
 export default function ToolkitsPublic() {
   const [search, setSearch] = useState("");
@@ -104,12 +105,13 @@ export default function ToolkitsPublic() {
             </div>
 
             <div className="px-6 pb-6 mt-auto relative z-10 border-t pt-5 border-[#3b494b]/20">
-              <Link 
-                to={`/toolkits/${item.slug}`} 
-                className={`w-full py-3.5 rounded-xl border font-black text-[11px] tracking-[0.25em] uppercase text-center transition-all flex items-center justify-center gap-3 ${dark ? "border-cyan-500/20 bg-cyan-500/5 text-cyan-400 hover:bg-cyan-500 hover:text-[#0B0F19] hover:border-cyan-500" : "bg-cyan-50 border-cyan-100 text-cyan-600 hover:bg-cyan-600 hover:text-white"}`}
+              <Button
+                to={`/toolkits/${item.slug}`}
+                variant="primary"
+                className="w-full flex items-center justify-center gap-3"
               >
                 ACCESS TOOLKIT <ArrowUpRight size={16} />
-              </Link>
+              </Button>
             </div>
           </article>
         );
@@ -137,12 +139,13 @@ export default function ToolkitsPublic() {
           
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1 text-[10px] font-black text-emerald-500/80"><Eye size={12} /> {item.views || 0}</span>
-            <Link 
-              to={`/toolkits/${item.slug}`} 
-              className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-[10px] font-black tracking-[0.1em] text-[#0B0F19] hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+            <Button
+              to={`/toolkits/${item.slug}`}
+              variant="primary"
+              className="px-5"
             >
               OPEN MODULE
-            </Link>
+            </Button>
           </div>
         </article>
       );
@@ -150,7 +153,7 @@ export default function ToolkitsPublic() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-[#10131a] text-slate-200" : "bg-slate-50 text-slate-900"} font-sans tracking-wide relative overflow-hidden`}>
+    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-[#0B0F19] text-slate-200" : "bg-slate-50 text-slate-900"} font-sans tracking-wide relative overflow-hidden`}>
       {/* Cinematic Gutter Ads */}
       <div className="hidden xl:block fixed left-4 top-1/2 -translate-y-1/2 z-40">
         <AdBanner position="LEFT_GUTTER" variant="skyscraper" />
@@ -198,20 +201,20 @@ export default function ToolkitsPublic() {
 
           {toolkitPayload.page < toolkitPayload.totalPages && (
             <div className="mt-8 text-center">
-              <button
+              <Button
+                variant="secondary"
                 onClick={loadMore}
                 disabled={loading}
-                className="rounded-full bg-[#111622] border border-[#1A2333] px-6 py-3 text-[11px] font-bold tracking-[0.15em] text-slate-300 uppercase hover:text-cyan-400 hover:border-cyan-500/50 transition-all"
               >
                 {loading ? "INITIALIZING..." : "LOAD MORE RESOURCES"}
-              </button>
+              </Button>
             </div>
           )}
         </main>
       </div>
 
       {/* DESKTOP LAYOUT */}
-      <div className={`mx-auto hidden min-h-screen max-w-[1400px] flex-col lg:flex transition-colors duration-300 ${dark ? "bg-[#10131a]" : "bg-white"}`}>
+      <div className={`mx-auto hidden min-h-screen max-w-[1400px] flex-col lg:flex transition-colors duration-300 bg-transparent`}>
         <main className="flex-1 px-8 py-12 max-w-[1200px] mx-auto w-full animate-fade-in-up">
           <div className="mb-12 text-center">
             <h3 className={`text-[11px] font-black tracking-[0.3em] mb-4 uppercase flex items-center justify-center gap-4 before:content-[''] before:h-[1px] before:w-8 after:content-[''] after:h-[1px] after:w-8 ${dark ? "text-cyan-400 before:bg-cyan-400 after:bg-cyan-400" : "text-cyan-600 before:bg-cyan-600 after:bg-cyan-600"}`}>
@@ -241,14 +244,13 @@ export default function ToolkitsPublic() {
 
           {toolkitPayload.page < toolkitPayload.totalPages && (
             <div className="flex flex-col items-center justify-center mt-8 pb-10">
-              <button
+              <Button
+                variant="secondary"
                 onClick={loadMore}
                 disabled={loading}
-                className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase hover:text-cyan-400 transition-colors flex flex-col items-center gap-2"
               >
                 {loading ? "PROCESSING..." : "ACCESS ADDITIONAL RESOURCES"}
-                {!loading && <ChevronDown size={20} className="animate-bounce mt-1" />}
-              </button>
+              </Button>
             </div>
           )}
         </main>

@@ -5,6 +5,7 @@ import client from "../api/client";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import AdBanner from "../components/AdBanner";
+import Button from "../components/Button";
 
 const PAGE_SIZE = 12;
 
@@ -58,14 +59,16 @@ function NewsCard({ item, idx }) {
         <div className="flex items-center gap-3 text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">
           <Clock size={12} className="text-cyan-500/60" /> {new Date(item.pubDate || item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
         </div>
-        <a 
-          href={item.link} 
-          target="_blank" 
+        <Button
+          as="a"
+          href={item.link}
+          target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-[10px] font-black tracking-[0.1em] text-[#0B0F19] hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+          variant="primary"
+          className="py-2.5 px-5"
         >
           SYNC INTEL <ArrowUpRight size={14} />
-        </a>
+        </Button>
       </div>
     </article>
   );
@@ -165,17 +168,15 @@ export default function NewsPublic() {
         {/* Intelligence Category Chips */}
         <div className="flex flex-wrap justify-center gap-4 mb-16 animate-in fade-in slide-in-from-bottom-5 duration-1000 delay-200">
           {chips.map((chip) => (
-            <button
+            <Button
               key={chip}
               onClick={() => setActiveChip(chip)}
-              className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 border ${
-                activeChip === chip
-                  ? "bg-cyan-500/10 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)] scale-105"
-                  : "bg-transparent border-[#3b494b] text-slate-500 hover:border-slate-400 hover:text-slate-300"
-              }`}
+              variant="filter"
+              active={activeChip === chip}
+              className="!rounded-full"
             >
               {chip}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -195,21 +196,6 @@ export default function NewsPublic() {
         )}
       </main>
 
-      <footer className="relative z-10 border-t border-[#3b494b] py-8 px-8 text-[10px] font-black tracking-widest text-slate-600 bg-[#10131a]">
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex gap-8">
-            <span className="text-cyan-600/50">SYSTEM_STREAM: ACTIVE</span>
-            <span>DATA_LATENCY: 12ms</span>
-            <span>SECURE_NODE: DHUB_INTEL_01</span>
-          </div>
-          <div className="flex gap-8 uppercase">
-            <Link to="/" className="hover:text-cyan-400 transition-colors">Home</Link>
-            <Link to="/news" className="text-cyan-400">News Feed</Link>
-            <Link to="/repos" className="hover:text-cyan-400 transition-colors">Repos</Link>
-            <Link to="/websites" className="hover:text-cyan-400 transition-colors">Websites</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
