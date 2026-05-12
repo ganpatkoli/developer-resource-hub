@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Compass, Database, Radio, User, Star, GitFork, BookOpen, SlidersHorizontal, Settings as SettingsIcon, UserCircle, ChevronDown, Eye } from "lucide-react";
+import { Search, Compass, Database, Radio, User, Star,ArrowUpRight  , GitFork, BookOpen, SlidersHorizontal, Settings as SettingsIcon, UserCircle, ChevronDown, Eye } from "lucide-react";
 import client, { getUserToken } from "../api/client";
 import { useSettings } from "../context/SettingsContext";
 import { useTheme } from "../context/ThemeContext";
@@ -185,53 +185,65 @@ export default function ReposPublic() {
           meta.language === "C++" ? "border-cyan-900/30 bg-cyan-900/20" : "border-[#1A2333] bg-[#0A1220]";
 
       return (
-        <article key={repo.id || i} className={`rounded-2xl border transition-all duration-300 group ${dark ? "border-[#1A2333] bg-[#111622] hover:border-cyan-500/30" : "border-slate-200 bg-white shadow-lg"} ${isDesktop ? "p-8" : "p-6"} flex flex-col`}>
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full border border-[#1A2333] overflow-hidden flex items-center justify-center bg-[#0B0F19]">
-                <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${owner}`} alt="avatar" className="w-8 h-8 opacity-80" />
+        <article key={repo.id || i} className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-500 overflow-hidden ${dark ? "border-[#1A2333] bg-[#111622]/40 backdrop-blur-sm hover:border-[#00dbe9]/50" : "border-slate-200 bg-white shadow-xl shadow-slate-200/50 hover:border-blue-400"} ${isDesktop ? "p-8 h-[360px]" : "p-6 h-[340px]"}`}>
+          {/* Decorative Glow */}
+          <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${dark ? "bg-cyan-500" : "bg-blue-500"}`} />
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className={`h-12 w-12 rounded-xl border overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 ${dark ? "border-[#1A2333] bg-[#0B0F19]" : "border-slate-100 bg-slate-50"}`}>
+                  <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${owner}`} alt="" className="w-8 h-8 opacity-80" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <h2 className={`font-bold tracking-tight transition-colors group-hover:text-cyan-400 truncate ${isDesktop ? "text-xl" : "text-md"} ${dark ? "text-white" : "text-slate-900"}`}>
+                    <span className={dark ? "text-cyan-400" : "text-blue-600"}>{owner}</span> <span className="text-slate-500">/</span> {repoName}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${dark ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" : "bg-blue-50 text-blue-600 border-blue-100"}`}>
+                      {repo.category?.name || "ARCHIVE"}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate">v2.4.1 // STABLE</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <h2 className={`font-black tracking-tight ${isDesktop ? "text-xl" : "text-md"} ${dark ? "text-white" : "text-slate-900"}`}>
-                  <span className="text-cyan-400">{owner}</span> <span className="text-slate-500">/</span> {repoName}
-                </h2>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">v2.4.1 // PRODUCTION READY</span>
+              <button
+                onClick={() => toggleFavorite(repo.id)}
+                className={`transition-colors shrink-0 ${favoritePostIds.includes(repo.id) ? "text-yellow-400" : "text-slate-500 hover:text-cyan-400"}`}
+              >
+                <Star size={20} fill={favoritePostIds.includes(repo.id) ? "currentColor" : "none"} />
+              </button>
+            </div>
+
+            <p className={`mb-8 ${isDesktop ? "text-[13px]" : "text-[12px]"} leading-relaxed line-clamp-3 font-medium transition-colors ${dark ? "text-slate-400 group-hover:text-slate-300" : "text-slate-600"}`}>
+              {repo.description || "No description provided for this technical resource."}
+            </p>
+          </div>
+
+          <div className="relative z-10">
+            <div className={`mb-6 flex flex-wrap items-center gap-y-3 gap-x-6 ${isDesktop ? "text-[11px]" : "text-[10px]"} font-bold text-slate-500 uppercase tracking-widest`}>
+              <span className="flex items-center gap-2"><Star size={16} className={dark ? "text-cyan-400/40" : "text-blue-500/40"} /> {formatCount(meta.stars || 0)}</span>
+              <span className="flex items-center gap-2"><GitFork size={16} className={dark ? "text-cyan-400/40" : "text-blue-500/40"} /> {formatCount(meta.forks || 0)}</span>
+              <span className="flex items-center gap-2"><Eye size={16} className={dark ? "text-emerald-500/40" : "text-emerald-600/40"} /> {formatCount(repo.views || 0)}</span>
+
+              <div className={`flex items-center gap-2.5 rounded-full px-3 py-1.5 border ml-auto ${dark ? "border-cyan-500/10 bg-cyan-500/5 text-cyan-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                <span className={`h-2 w-2 rounded-full ${langColor} shadow-[0_0_8px_currentColor]`}></span>
+                <span className="uppercase tracking-[0.1em]">{meta.language || "Unknown"}</span>
               </div>
             </div>
-            <button
-              onClick={() => toggleFavorite(repo.id)}
-              className={`transition-colors shrink-0 ${favoritePostIds.includes(repo.id) ? "text-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.2)]" : "text-slate-500 hover:text-cyan-400"}`}
+
+            <Button
+              as="a"
+              href={repo.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackView(repo.id)}
+              variant="secondary"
+              className="w-full !py-3 !rounded-xl border-cyan-500/30 hover:border-cyan-500"
             >
-              <Star size={20} fill={favoritePostIds.includes(repo.id) ? "currentColor" : "none"} />
-            </button>
+              VIEW REPOSITORY <ArrowUpRight size={14} className="ml-1" />
+            </Button>
           </div>
-
-          <p className={`mb-8 ${isDesktop ? "text-[14px]" : "text-[12px]"} leading-relaxed line-clamp-3 ${dark ? "text-slate-400" : "text-slate-600 font-medium"}`}>
-            {repo.description || "Experimental interface for bridging disparate LLM outputs into a unified semantic consensus layer for high-speed analysis."}
-          </p>
-
-          <div className={`mb-8 flex flex-wrap items-center gap-y-3 gap-x-6 ${isDesktop ? "text-[11px]" : "text-[10px]"} font-black text-slate-500 uppercase tracking-widest`}>
-            <span className="flex items-center gap-2"><Star size={16} className="text-cyan-400/60" /> {formatCount(meta.stars || 0)}</span>
-            <span className="flex items-center gap-2"><GitFork size={16} className="text-cyan-400/60" /> {formatCount(meta.forks || 0)}</span>
-            <span className="flex items-center gap-2"><Eye size={16} className="text-cyan-400/60" /> {formatCount(repo.views || 0)}</span>
-
-            <div className={`flex items-center gap-2.5 rounded-full px-3 py-1.5 border ml-auto ${dark ? "border-[#1A2333] bg-[#0B0F19]" : "border-slate-200 bg-slate-50"}`}>
-              <span className={`h-2 w-2 rounded-full ${langColor} shadow-[0_0_8px_currentColor]`}></span>
-              <span className={`${dark ? "text-slate-300" : "text-slate-600 font-medium"}`}>{meta.language || "Unknown"}</span>
-            </div>
-          </div>
-
-          <Button
-            as="a"
-            href={repo.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackView(repo.id)}
-            variant="primary"
-            className="w-full"
-          >
-            View Repository
-          </Button>
         </article>
       );
     });

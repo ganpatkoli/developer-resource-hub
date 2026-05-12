@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Compass, Database, Radio, User, Star, GitFork, BookOpen, SlidersHorizontal, Settings as SettingsIcon, UserCircle, ChevronDown, Globe, ExternalLink, Eye } from "lucide-react";
+import { Search, Compass, Database, Radio, User, Star,ArrowUpRight  , GitFork, BookOpen, SlidersHorizontal, Settings as SettingsIcon, UserCircle, ChevronDown, Globe, ExternalLink, Eye } from "lucide-react";
 import client, { getUserToken } from "../api/client";
 import { useSettings } from "../context/SettingsContext";
 import { useTheme } from "../context/ThemeContext";
@@ -221,54 +221,65 @@ export default function WebsitesPublic() {
           meta.language === "C++" ? "border-cyan-900/30 bg-cyan-900/20" : "border-[#1A2333] bg-[#0A1220]";
 
       return (
-        <article key={repo.id || i} className={`rounded-xl border ${dark ? "border-[#1A2333] bg-[#111622]" : "border-slate-200 bg-white shadow-sm"} ${isDesktop ? "p-6" : "p-5"} flex flex-col justify-between hover-cyber-lift transition-colors`}>
-          <div>
-            <div className="mb-4 flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-900/30 border border-cyan-900/50 text-cyan-400">
-                  {isGithub ? <GitFork size={16} /> : <Globe size={16} />}
+        <article key={repo.id || i} className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-500 overflow-hidden ${dark ? "border-[#1A2333] bg-[#111622]/40 backdrop-blur-sm hover:border-[#00dbe9]/50" : "border-slate-200 bg-white shadow-xl shadow-slate-200/50 hover:border-blue-400"} ${isDesktop ? "p-6 h-[340px]" : "p-5 h-[320px]"}`}>
+          {/* Decorative Glow */}
+          <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${dark ? "bg-cyan-500" : "bg-blue-500"}`} />
+
+          <div className="relative z-10">
+            <div className="mb-5 flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-500 group-hover:scale-105 ${dark ? "border-[#1A2333] bg-[#0B0F19] text-cyan-400 group-hover:border-cyan-500/40" : "border-slate-100 bg-slate-50 text-blue-500 group-hover:border-blue-200"}`}>
+                  {isGithub ? <GitFork size={18} /> : <Globe size={18} />}
                 </div>
-                <h2 className={`${isDesktop ? "text-lg" : "text-[15px]"} font-bold line-clamp-1 ${dark ? "text-slate-200" : "text-slate-800"}`}>
-                  {isGithub ? (
-                    <><span className={dark ? "text-cyan-400" : "text-blue-600"}>{owner}</span> <span className="text-slate-500">/</span> {repoName}</>
-                  ) : (
-                    repo.title
-                  )}
-                </h2>
+                <div className="min-w-0">
+                  <h2 className={`${isDesktop ? "text-lg" : "text-[15px]"} font-bold line-clamp-1 transition-colors group-hover:text-cyan-400 ${dark ? "text-slate-100" : "text-slate-800"}`}>
+                    {isGithub ? (
+                      <><span className={dark ? "text-cyan-400" : "text-blue-600"}>{owner}</span> <span className="text-slate-500">/</span> {repoName}</>
+                    ) : (
+                      repo.title
+                    )}
+                  </h2>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${dark ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" : "bg-blue-50 text-blue-600 border-blue-100"}`}>
+                      {repo.category?.name || "PLATFORM"}
+                    </span>
+                    {!isGithub && (
+                       <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest truncate max-w-[120px]">
+                        {domain}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => toggleFavorite(repo.id)}
                 className={`transition-colors mt-1 shrink-0 ${favoritePostIds.includes(repo.id) ? "text-yellow-400" : "text-slate-500 hover:text-cyan-400"}`}
               >
-                <Star size={16} fill={favoritePostIds.includes(repo.id) ? "currentColor" : "none"} />
+                <Star size={18} fill={favoritePostIds.includes(repo.id) ? "currentColor" : "none"} />
               </button>
             </div>
 
-            <p className={`mb-5 ${isDesktop ? "text-[13px]" : "text-[11px]"} leading-relaxed line-clamp-3 ${dark ? "text-slate-400" : "text-slate-600 font-medium"}`}>
-              {repo.description || "Experimental interface for bridging disparate LLM outputs into a unified semantic consensus layer for high-speed analysis."}
+            <p className={`mb-5 ${isDesktop ? "text-[12px]" : "text-[11px]"} leading-relaxed line-clamp-3 font-medium transition-colors ${dark ? "text-slate-400 group-hover:text-slate-300" : "text-slate-600"}`}>
+              {repo.description || "No description provided for this technical resource hub."}
             </p>
           </div>
 
-          <div>
-            <div className={`mb-5 flex flex-wrap items-center gap-y-2 gap-x-4 ${isDesktop ? "text-[11px]" : "text-[10px]"} font-bold text-slate-400`}>
+          <div className="relative z-10">
+            <div className={`mb-6 flex flex-wrap items-center gap-y-2 gap-x-4 ${isDesktop ? "text-[11px]" : "text-[10px]"} font-bold text-slate-500 uppercase tracking-widest`}>
               {isGithub ? (
                 <>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap"><Star size={14} className="text-blue-500/70" /> {formatCount(meta.stars || 0)}</span>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap"><GitFork size={14} className="text-blue-500/70" /> {formatCount(meta.forks || 0)}</span>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap text-emerald-500/80"><Eye size={14} /> {formatCount(repo.views || 0)}</span>
-
-                  <div className={`flex items-center gap-2 rounded-full px-2.5 py-1 border ${langBorderClass} ml-auto`}>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap"><Star size={14} className={dark ? "text-cyan-500/40" : "text-blue-500/40"} /> {formatCount(meta.stars || 0)}</span>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap"><GitFork size={14} className={dark ? "text-cyan-500/40" : "text-blue-500/40"} /> {formatCount(meta.forks || 0)}</span>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap"><Eye size={14} className={dark ? "text-emerald-500/40" : "text-emerald-600/40"} /> {formatCount(repo.views || 0)}</span>
+                  <div className={`ml-auto flex items-center gap-2 rounded-full px-2.5 py-1 border border-cyan-500/10 bg-cyan-500/5`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${langColor} shadow-[0_0_5px_currentColor]`}></span>
-                    <span className={`font-black uppercase tracking-widest ${langTextClass}`}>{meta.language || "Code"}</span>
+                    <span className={`font-black uppercase tracking-widest text-cyan-400`}>{meta.language || "Code"}</span>
                   </div>
                 </>
               ) : (
                 <>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap text-cyan-400/80 uppercase tracking-widest font-black"><Globe size={14} /> {domain}</span>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap text-emerald-500/80"><Eye size={14} /> {formatCount(repo.views || 0)}</span>
-                  <div className="flex items-center gap-2 rounded-full px-2.5 py-1 border border-cyan-900/30 bg-cyan-900/20 text-cyan-300 ml-auto">
-                    <span className="font-black uppercase tracking-widest">{repo.category?.name || "Website"}</span>
-                  </div>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap text-cyan-500/60 uppercase tracking-widest font-black"><Globe size={14} /> {domain}</span>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap text-emerald-500/60"><Eye size={14} /> {formatCount(repo.views || 0)}</span>
                 </>
               )}
             </div>
@@ -279,10 +290,10 @@ export default function WebsitesPublic() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackView(repo.id)}
-              variant="primary"
-              className="w-full"
+              variant="secondary"
+              className="w-full !py-3 !rounded-xl border-cyan-500/30 hover:border-cyan-500"
             >
-              Visit Platform ↗
+              VISIT PLATFORM <ArrowUpRight size={14} className="ml-1" />
             </Button>
           </div>
         </article>

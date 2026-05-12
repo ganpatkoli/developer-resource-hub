@@ -1,4 +1,5 @@
 import { Ad } from "../models/Ad.js";
+import { clearCache } from "../utils/cache.js";
 
 export const getAds = async (req, res) => {
   try {
@@ -20,6 +21,7 @@ export const getAds = async (req, res) => {
 export const createAd = async (req, res) => {
   try {
     const ad = await Ad.create(req.body);
+    await clearCache("ads");
     res.status(201).json({ success: true, data: ad });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -32,6 +34,7 @@ export const updateAd = async (req, res) => {
     if (!ad) return res.status(404).json({ success: false, message: "Ad not found" });
     
     await ad.update(req.body);
+    await clearCache("ads");
     res.json({ success: true, data: ad });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -44,6 +47,7 @@ export const deleteAd = async (req, res) => {
     if (!ad) return res.status(404).json({ success: false, message: "Ad not found" });
     
     await ad.destroy();
+    await clearCache("ads");
     res.json({ success: true, message: "Ad deleted" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

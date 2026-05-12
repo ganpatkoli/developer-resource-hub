@@ -17,57 +17,68 @@ const RSS_FEEDS = [
   { url: "https://techcrunch.com/feed/", category: "TECH ROOT" }
 ];
 
+function decodeHtml(html) {
+  const txt = document.createElement("textarea");
+  txt.innerHTML = html;
+  return txt.value;
+}
+
 function NewsCard({ item, idx }) {
   const { dark } = useTheme();
-  const cleanDescription = item.description?.replace(/<[^>]*>?/gm, '').split(' ').slice(0, 25).join(' ') + '...';
+  
+  const rawDesc = item.description?.replace(/<[^>]*>?/gm, '') || "";
+  const decodedDesc = decodeHtml(rawDesc);
+  const cleanDescription = decodedDesc.split(' ').slice(0, 25).join(' ') + (decodedDesc.split(' ').length > 25 ? '...' : '');
+  const decodedTitle = decodeHtml(item.title || "");
   
   return (
-    <article className={`group relative flex flex-col p-6 rounded-2xl border transition-all duration-300 overflow-hidden h-[340px] ${dark ? "bg-[#111622] border-[#1A2333] hover:border-cyan-500/50" : "bg-white border-slate-200 shadow-lg shadow-slate-100 hover:border-blue-400"}`}>
+    <article className={`group relative flex flex-col p-6 rounded-2xl border transition-all duration-500 overflow-hidden h-[360px] ${dark ? "bg-[#111622]/40 border-[#1A2333] hover:border-[#00dbe9]/50 backdrop-blur-sm" : "bg-white border-slate-200 shadow-xl shadow-slate-200/50 hover:border-blue-400"}`}>
       {/* Decorative Glow */}
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/5 rounded-full blur-3xl group-hover:bg-cyan-500/10 transition-all" />
+      <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${dark ? "bg-cyan-500" : "bg-blue-500"}`} />
 
-      <div className="flex gap-4 mb-5">
+      <div className="flex gap-4 mb-5 relative z-10">
         {/* Compact Thumbnail/Icon */}
-        <div className="h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-[#1A2333] bg-[#0B0F19] flex items-center justify-center relative group-hover:border-cyan-500/50 transition-colors">
+        <div className={`h-14 w-14 shrink-0 rounded-xl overflow-hidden border flex items-center justify-center transition-all duration-500 group-hover:scale-105 ${dark ? "border-[#1A2333] bg-[#0B0F19] group-hover:border-[#00dbe9]/40" : "border-slate-100 bg-slate-50 group-hover:border-blue-200"}`}>
           {item.image ? (
-            <img src={item.image} alt={item.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            <img src={item.image} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
           ) : (
-            <Newspaper size={24} className="text-cyan-500/40" />
+            <Newspaper size={24} className={dark ? "text-cyan-500/30" : "text-blue-500/30"} />
           )}
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="bg-cyan-500/10 text-cyan-400 text-[8px] font-black px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-[0.1em]">
-              {item.category || "TECH INTEL"}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className={`text-[8px] font-black px-2 py-0.5 rounded border uppercase tracking-widest ${dark ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" : "bg-blue-50 text-blue-600 border-blue-100"}`}>
+              {item.category || "INTEL"}
             </span>
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">
-               {item.source?.toUpperCase().replace('TECHNOLOGY - GOOGLE NEWS', 'GOOGLE HUB') || "REUTERS INTEL"}
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest truncate">
+               {item.source?.toUpperCase().replace('TECHNOLOGY - GOOGLE NEWS', 'GOOGLE HUB').replace(/&AMP;/g, '&') || "FEED SOURCE"}
             </span>
           </div>
-          <h3 className={`text-[14px] font-black leading-tight group-hover:text-cyan-400 transition-colors line-clamp-2 uppercase tracking-tight ${dark ? "text-slate-100" : "text-slate-900"}`}>
-            {item.title}
+          <h3 className={`text-[15px] font-bold leading-tight group-hover:text-cyan-400 transition-colors line-clamp-2 uppercase tracking-tight ${dark ? "text-slate-100" : "text-slate-800"}`}>
+            {decodedTitle}
           </h3>
         </div>
       </div>
 
-      <p className={`text-[11px] leading-relaxed mb-6 line-clamp-4 flex-grow font-medium ${dark ? "text-slate-400" : "text-slate-600"}`}>
+      <p className={`text-[11px] leading-relaxed mb-6 line-clamp-4 flex-grow font-medium relative z-10 ${dark ? "text-slate-400" : "text-slate-600"}`}>
         {cleanDescription}
       </p>
 
-      <div className="flex items-center justify-between pt-5 border-t border-[#3b494b]/20">
-        <div className="flex items-center gap-3 text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">
-          <Clock size={12} className="text-cyan-500/60" /> {new Date(item.pubDate || item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+      <div className="flex items-center justify-between pt-5 border-t border-[#3b494b]/20 mt-auto relative z-10">
+        <div className="flex items-center gap-2.5 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+          <Clock size={12} className={dark ? "text-cyan-500/60" : "text-blue-500/60"} /> 
+          {new Date(item.pubDate || item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
         </div>
         <Button
           as="a"
           href={item.link}
           target="_blank"
           rel="noopener noreferrer"
-          variant="primary"
-          className="py-2.5 px-5"
+          variant="secondary"
+          className="!py-2 !px-4 !text-[9px] !rounded-lg border-cyan-500/30 hover:border-cyan-500"
         >
-          SYNC INTEL <ArrowUpRight size={14} />
+          SYNC INTEL <ArrowUpRight size={12} />
         </Button>
       </div>
     </article>

@@ -27,6 +27,9 @@ export const updateSettings = async (req, res) => {
     if (req.body.customSections !== undefined) {
       updateData.customSections = req.body.customSections;
     }
+    if (req.body.security !== undefined) {
+      updateData.security = { ...settings.security, ...req.body.security };
+    }
     
     await settings.update(updateData);
     res.json(settings);

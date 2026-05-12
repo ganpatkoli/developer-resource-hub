@@ -9,7 +9,7 @@ export const Post = sequelize.define("Post", {
     primaryKey: true
   },
   title: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     allowNull: false
   },
   description: {
@@ -17,7 +17,7 @@ export const Post = sequelize.define("Post", {
     allowNull: false
   },
   link: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     allowNull: false
   },
   type: {

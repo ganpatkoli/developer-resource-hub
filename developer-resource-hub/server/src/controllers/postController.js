@@ -228,7 +228,7 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
       const normalizedCategory = normalizeLookupText(category);
       const categoryType = getCategoryTypeForPostType(type);
       const categoryKey = buildCategoryKey(type, category);
-      const categoryKeyLower = `${categoryType}::${category.toLowerCase()}`;
+      const categoryKeyLower = `${categoryType}::${String(category || "").toLowerCase()}`;
       if (isUUID(category) && categoryIdSet.has(category)) {
         resolvedCategoryId = category;
       } else if (categoryMap[categoryKeyLower]) {
@@ -265,6 +265,7 @@ export const importPostsBulk = asyncHandler(async (req, res) => {
         updated += 1;
       }
     } catch (err) {
+      console.error("Bulk Import Error at index", index, ":", err);
       errors.push({ index, message: err?.message || "Unexpected import error" });
       skipped += 1;
     }

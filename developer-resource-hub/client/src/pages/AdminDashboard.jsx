@@ -78,6 +78,17 @@ export default function AdminDashboard() {
     }
   }
 
+  async function updateSecuritySetting(key, enabled) {
+    try {
+      const updatedSecurity = { ...settings.security, [key]: enabled };
+      const { data } = await client.put("/settings", { security: updatedSecurity }, { authType: "admin" });
+      setSettings(data);
+      showMsg("ok", "Security updated");
+    } catch (err) {
+      showMsg("err", "Failed to update security settings");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#10131a] text-[#e1e2eb] font-sans relative overflow-hidden">
       {/* Background Grid Pattern */}
@@ -161,6 +172,34 @@ export default function AdminDashboard() {
                         <div className="w-12 h-6 bg-[#10131a] border border-[#3b494b] rounded-none peer peer-checked:bg-[#00dbe9]/20 peer-checked:border-[#00dbe9] after:content-[''] after:absolute after:top-1 after:left-1 after:bg-[#849495] peer-checked:after:bg-[#00dbe9] after:rounded-none after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-6 relative"></div>
                       </label>
                     ))}
+                  </div>
+                </section>
+
+                <section className="border border-[#3b494b] bg-[#161b22]/70 backdrop-blur-xl p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex h-10 w-10 items-center justify-center bg-rose-500/10 text-rose-400 border border-rose-500">
+                      <SettingsIcon size={22} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-[#e1e2eb]">Security Settings</h2>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#849495]">Anti-Copy Protection</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 max-w-md">
+                    <label className="flex items-center justify-between p-4 border border-[#3b494b] bg-transparent cursor-pointer transition-all hover:bg-[#272a31]">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-rose-400">INSPECT ELEMENT</p>
+                        <p className="text-sm font-bold mt-0.5 text-[#e1e2eb]">Disable Right-Click & F12</p>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer"
+                        checked={settings.security?.disableInspect === true} 
+                        onChange={(e) => updateSecuritySetting("disableInspect", e.target.checked)} 
+                      />
+                      <div className="w-12 h-6 bg-[#10131a] border border-[#3b494b] rounded-none peer peer-checked:bg-rose-500/20 peer-checked:border-rose-500 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-[#849495] peer-checked:after:bg-rose-500 after:rounded-none after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-6 relative"></div>
+                    </label>
                   </div>
                 </section>
 

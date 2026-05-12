@@ -232,7 +232,24 @@ export default function AddRepoView() {
                         placeholder='[{"title":"...","description":"...","link":"...","category":"..."}]'
                         className="w-full border border-[#3b494b] bg-[#10131a]/80 px-4 py-3 text-xs font-mono outline-none transition-all h-32 focus:border-[#ebb2ff] text-[#e1e2eb] placeholder:text-[#849495]/50"
                       />
-                      {importMessage && <p className="mt-3 text-[10px] font-bold uppercase tracking-widest text-[#00dbe9]">{importMessage}</p>}
+                      {importMessage && (
+                        <div className="mt-3 space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[#00dbe9]">{importMessage}</p>
+                          {importResult && (
+                            <p className="text-[9px] font-bold text-[#849495] uppercase tracking-tighter">
+                              Created: {importResult.created} | Updated: {importResult.updated} | Skipped: {importResult.skipped}
+                            </p>
+                          )}
+                          {importResult?.errors?.length > 0 && (
+                            <div className="mt-2 p-2 border border-[#93000a]/30 bg-[#93000a]/10 max-h-32 overflow-y-auto">
+                              {importResult.errors.slice(0, 5).map((err, i) => (
+                                <p key={i} className="text-[8px] font-mono text-[#ffb4ab]">Row {err.index + 1}: {err.message}</p>
+                              ))}
+                              {importResult.errors.length > 5 && <p className="text-[8px] font-mono text-[#ffb4ab]">...and {importResult.errors.length - 5} more</p>}
+                            </div>
+                          )}
+                        </div>
+                      )}
                    </section>
                 )}
               </div>

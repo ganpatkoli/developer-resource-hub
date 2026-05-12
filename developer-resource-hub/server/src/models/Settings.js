@@ -18,6 +18,12 @@ export const Settings = sequelize.define("Settings", {
   customSections: {
     type: DataTypes.JSONB,
     defaultValue: []
+  },
+  security: {
+    type: DataTypes.JSONB,
+    defaultValue: {
+      disableInspect: false
+    }
   }
 }, {
   timestamps: true

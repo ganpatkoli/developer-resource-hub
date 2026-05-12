@@ -30,6 +30,7 @@ import ToolkitManagementView from "./pages/ToolkitManagementView";
 import AddToolkitView from "./pages/AddToolkitView";
 import ToolkitDetail from "./pages/ToolkitDetail";
 import ToolkitsPublic from "./pages/ToolkitsPublic";
+import { useSettings } from "./context/SettingsContext";
 
 import MobileNav from "./components/MobileNav";
 
@@ -78,7 +79,32 @@ const SEO_BY_ROUTE = {
 };
 
 function Layout({ children }) {
+  const { settings } = useSettings();
   const location = useLocation();
+
+  useEffect(() => {
+    if (settings?.security?.disableInspect) {
+      const handleContextMenu = (e) => e.preventDefault();
+      const handleKeyDown = (e) => {
+        // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+        if (
+          e.keyCode === 123 ||
+          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
+          (e.ctrlKey && e.keyCode === 85)
+        ) {
+          e.preventDefault();
+        }
+      };
+
+      window.addEventListener("contextmenu", handleContextMenu);
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        window.removeEventListener("contextmenu", handleContextMenu);
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [settings?.security?.disableInspect]);
+
   const isAdminPath = location.pathname.startsWith("/admin");
   const isAuthScreen = 
     location.pathname === "/login" || 
