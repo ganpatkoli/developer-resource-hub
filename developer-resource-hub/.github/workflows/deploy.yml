@@ -13,15 +13,15 @@ jobs:
 
       - name: Install and Build
         run: |
-          cd client          # Client folder ke andar jana zaroori hai
+          cd client
           npm install
           npm run build
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./client/build/    # Client folder ke andar ka build folder
+          server: 62.72.13.242
+          username: root
+          password: "@0E7yr4n;GQ+;g2oo5jW"
+          local-dir: ./client/dist/    # Vite projects usually build to 'dist' folder
           server-dir: ./public_html/
