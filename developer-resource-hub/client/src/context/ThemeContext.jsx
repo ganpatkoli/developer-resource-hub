@@ -1,3 +1,4 @@
+import React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const STORAGE_KEY = "dhub_theme";
