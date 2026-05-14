@@ -34,9 +34,6 @@ const ToolkitDetail = lazy(() => import("./pages/ToolkitDetail"));
 const ToolkitsPublic = lazy(() => import("./pages/ToolkitsPublic"));
 
 import UserProtectedRoute from "./components/UserProtectedRoute";
-import { useSettings } from "./context/SettingsContext";
-
-import MobileNav from "./components/MobileNav";
 
 const SEO_BASE_URL = "https://aiguardian.cloud";
 const SEO_DEFAULT_IMAGE = `${SEO_BASE_URL}/LOGO.png`;
