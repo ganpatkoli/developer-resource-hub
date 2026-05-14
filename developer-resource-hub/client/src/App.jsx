@@ -1,35 +1,39 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Home from "./pages/Home";
-import ReposPublic from "./pages/Repos";
-import WebsitesPublic from "./pages/WebsitesPublic";
-import AdminLogin from "./pages/AdminLogin"; // Unused now
-import UserLogin from "./pages/UserLogin";
+import MobileNav from "./components/MobileNav";
+import { useSettings } from "./context/SettingsContext";
+
+// Lazy load pages
+const Home = lazy(() => import("./pages/Home"));
+const ReposPublic = lazy(() => import("./pages/Repos"));
+const WebsitesPublic = lazy(() => import("./pages/WebsitesPublic"));
+const UserLogin = lazy(() => import("./pages/UserLogin"));
+const UserDashboard = lazy(() => import("./pages/UserDashboard"));
+const OAuthSuccess = lazy(() => import("./pages/OAuthSuccess"));
+const Signup = lazy(() => import("./pages/Signup"));
+const CategoryManagementView = lazy(() => import("./pages/CategoryManagementView"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminAnalytics = lazy(() => import("./pages/AdminAnalytics"));
+const AddCategoryView = lazy(() => import("./pages/AddCategoryView"));
+const GithubRepoManagementView = lazy(() => import("./pages/GithubRepoManagementView"));
+const AddRepoView = lazy(() => import("./pages/AddRepoView"));
+const ResearchManagementView = lazy(() => import("./pages/ResearchManagementView"));
+const AddResearchView = lazy(() => import("./pages/AddResearchView"));
+const ResearchPublic = lazy(() => import("./pages/ResearchPublic"));
+const WebsiteManagementView = lazy(() => import("./pages/WebsiteManagementView"));
+const AddWebsiteView = lazy(() => import("./pages/AddWebsiteView"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const AdminAds = lazy(() => import("./pages/AdminAds"));
+const NewsPublic = lazy(() => import("./pages/NewsPublic"));
+const ToolkitManagementView = lazy(() => import("./pages/ToolkitManagementView"));
+const AddToolkitView = lazy(() => import("./pages/AddToolkitView"));
+const ToolkitDetail = lazy(() => import("./pages/ToolkitDetail"));
+const ToolkitsPublic = lazy(() => import("./pages/ToolkitsPublic"));
+
 import UserProtectedRoute from "./components/UserProtectedRoute";
-import UserDashboard from "./pages/UserDashboard";
-import OAuthSuccess from "./pages/OAuthSuccess";
-import Signup from "./pages/Signup";
-import CategoryManagementView from "./pages/CategoryManagementView";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminAnalytics from "./pages/AdminAnalytics";
-import AddCategoryView from "./pages/AddCategoryView";
-import GithubRepoManagementView from "./pages/GithubRepoManagementView";
-import AddRepoView from "./pages/AddRepoView";
-import ResearchManagementView from "./pages/ResearchManagementView";
-import AddResearchView from "./pages/AddResearchView";
-import ResearchPublic from "./pages/ResearchPublic";
-import WebsiteManagementView from "./pages/WebsiteManagementView";
-import AddWebsiteView from "./pages/AddWebsiteView";
-import Favorites from "./pages/Favorites";
-import AdminAds from "./pages/AdminAds";
-import NewsPublic from "./pages/NewsPublic";
-import ToolkitManagementView from "./pages/ToolkitManagementView";
-import AddToolkitView from "./pages/AddToolkitView";
-import ToolkitDetail from "./pages/ToolkitDetail";
-import ToolkitsPublic from "./pages/ToolkitsPublic";
 import { useSettings } from "./context/SettingsContext";
 
 import MobileNav from "./components/MobileNav";
@@ -224,11 +228,18 @@ function Layout({ children }) {
 
 
 
+const LoadingFallback = () => (
+  <div className="flex-1 flex items-center justify-center bg-[#0B0F19]">
+    <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
+  </div>
+);
+
 export default function App() {
   return (
     <HelmetProvider>
       <Layout>
-        <Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/repos" element={<ReposPublic />} />
           <Route path="/news" element={<NewsPublic />} />
@@ -395,6 +406,7 @@ export default function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </Layout>
     </HelmetProvider>
   );

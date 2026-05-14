@@ -59,6 +59,13 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Attach security key to all requests to prevent direct API access
+  const securityKey = import.meta.env.VITE_API_SECURITY_KEY;
+  if (securityKey) {
+    config.headers["X-Client-Secure"] = securityKey;
+  }
+
   return config;
 });
 
